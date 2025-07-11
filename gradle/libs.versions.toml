@@ -4,6 +4,7 @@ sdk = "31.11.0"
 dex2jar = "2.4-SNAPSHOT"
 jadx = "1.4.5-SNAPSHOT"
 jadb = "1.2.1-SNAPSHOT"
+publish = "0.33.0"
 
 [libraries]
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -12,3 +13,6 @@ dex2jar = { module = "com.aliucord.d2j:dex-translator", version.ref = "dex2jar" 
 jadx-core = { module = "com.aliucord.jadx:jadx-core", version.ref = "jadx" }
 jadx-dexInput = { module = "com.aliucord.jadx:jadx-dex-input", version.ref = "jadx" }
 jadb = { module = "se.vidstige:jadb", version.ref = "jadb" }
+
+[plugins]
+publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }

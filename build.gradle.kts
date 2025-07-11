@@ -1,12 +1,10 @@
 plugins {
     `kotlin-dsl`
-    `maven-publish`
+    alias(libs.plugins.publish)
 }
 
-group = "com.aliucord"
-
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -21,28 +19,26 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("aliucord-gradle-plugin") {
+        create("aliucord") {
             id = "com.aliucord.gradle"
             implementationClass = "com.aliucord.gradle.AliucordPlugin"
         }
     }
 }
 
+mavenPublishing {
+    coordinates("com.aliucord", "gradle", "2.0.0")
+}
+
 publishing {
     repositories {
-        val username = System.getenv("MAVEN_USERNAME")
-        val password = System.getenv("MAVEN_PASSWORD")
-
-        if (username != null && password != null) {
-            maven {
-                credentials {
-                    this.username = username
-                    this.password = password
-                }
-                setUrl("https://maven.aliucord.com/snapshots")
+        maven {
+            name = "aliucord"
+            url = uri("https://maven.aliucord.com/snapshots")
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
             }
-        } else {
-            mavenLocal()
         }
     }
 }
