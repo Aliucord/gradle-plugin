@@ -1,7 +1,7 @@
 [versions]
 agp = "8.11.0"
 sdk = "31.11.0"
-dex2jar = "2.1-SNAPSHOT"
+dex2jar = "2.4-SNAPSHOT"
 jadx = "1.4.5-SNAPSHOT"
 jadb = "1.2.1-SNAPSHOT"
 
