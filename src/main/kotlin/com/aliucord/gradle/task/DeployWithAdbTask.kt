@@ -19,11 +19,13 @@ import com.aliucord.gradle.ProjectType
 import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import se.vidstige.jadb.*
+import java.io.File
 
 abstract class DeployWithAdbTask : DefaultTask() {
     @get:Input
@@ -59,20 +61,60 @@ abstract class DeployWithAdbTask : DefaultTask() {
             file = file.resolve("Injector.dex")
         }
 
-        val remotePath = when (extension.projectType.get()) {
-            ProjectType.PLUGIN -> "/storage/emulated/0/Aliucord/plugins/${file.name}"
-            ProjectType.CORE -> "/storage/emulated/0/Aliucord/Aliucord.zip"
-            ProjectType.INJECTOR -> "/storage/emulated/0/Android/data/com.aliucord.manager/cache/injector/${project.version}.custom.dex"
-        }
-        device.push(file, RemoteFile(remotePath))
-
-        val activityName = when (extension.projectType.get()) {
-            ProjectType.PLUGIN, ProjectType.CORE -> "com.aliucord/com.discord.app.AppActivity\$Main"
-            ProjectType.INJECTOR -> "com.aliucord.manager/com.aliucord.manager.MainActivity"
+        when (extension.projectType.get()) {
+            ProjectType.CORE -> deployCore(device, file)
+            ProjectType.INJECTOR -> deployInjector(device, file)
+            ProjectType.PLUGIN -> deployPlugin(device, file)
         }
 
-        val args = arrayListOf("start", "-S", "-n", activityName)
-        if (waitForDebugger) args += "-D"
+        logger.lifecycle("Deployed $file to ${device.serial}")
+    }
+
+    private fun deployCore(device: JadbDevice, file: File) {
+        createAliucordDirs(device)
+        device.push(file, RemoteFile("$REMOTE_ALIUCORD_DIR/Aliucord.zip"))
+        // TODO: enable core from storage
+        restartAliucord(device)
+    }
+
+    private fun deployInjector(device: JadbDevice, file: File) {
+        device.executeShell("mkdir", "-p", "$REMOTE_TMP/aliucord")
+        device.push(file, RemoteFile("$REMOTE_TMP/aliucord/${file.name}"))
+        restartManagerImport(device, "aliucord/${file.name}", "injector")
+    }
+
+    private fun deployPlugin(device: JadbDevice, file: File) {
+        createAliucordDirs(device)
+        device.push(file, RemoteFile("$REMOTE_ALIUCORD_DIR/plugins/${file.name}"))
+        // TODO: enable plugin in settings
+        restartAliucord(device)
+    }
+
+    /**
+     * Creates the Aliucord directory on the device along with all the subfolders (plugins, themes, settings).
+     */
+    private fun createAliucordDirs(device: JadbDevice) {
+        device.executeShell(
+            "mkdir",
+            "-v", // Verbose
+            "-p", // Create all parents
+            "$REMOTE_ALIUCORD_DIR/plugins",
+            "$REMOTE_ALIUCORD_DIR/themes",
+            "$REMOTE_ALIUCORD_DIR/settings",
+        )
+    }
+
+    /**
+     * Force (re)starts the main Aliucord activity on the device.
+     */
+    private fun restartAliucord(device: JadbDevice) {
+        val args = arrayListOf(
+            "start",
+            "-S", // Force restart app
+            "-n", "com.aliucord/com.discord.app.AppActivity\$Main",
+        )
+        if (waitForDebugger)
+            args += "-D"
 
         val response = device.executeShell("am", *args.toTypedArray())
             .readAllBytes()
@@ -80,8 +122,32 @@ abstract class DeployWithAdbTask : DefaultTask() {
 
         if (response.contains("Error")) {
             logger.error(response)
+            throw GradleException("Failed to deploy core to device")
         }
+    }
 
-        logger.lifecycle("Deployed $file to ${device.serial}")
+    private fun restartManagerImport(device: JadbDevice, componentPath: String, componentType: String) {
+        val args = arrayListOf(
+            "start",
+            "-n", "com.aliucord.manager/.MainActivity",
+            "-a", "com.aliucord.manager.IMPORT_COMPONENT",
+            "--es", "aliucord.file", componentPath,
+            // TODO: change customComponentType to componentType in Manager
+            "--es", "aliucord.componentType", componentType,
+        )
+
+        val response = device.executeShell("am", *args.toTypedArray())
+            .readAllBytes()
+            .decodeToString()
+
+        if (response.contains("Error")) {
+            logger.error(response)
+            throw GradleException("Failed to start custom component import on device")
+        }
+    }
+
+    private companion object {
+        const val REMOTE_ALIUCORD_DIR = "/storage/emulated/0/Aliucord"
+        const val REMOTE_TMP = "/data/local/tmp"
     }
 }
