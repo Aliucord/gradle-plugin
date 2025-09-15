@@ -47,12 +47,8 @@ internal fun registerTasks(project: Project) {
         group = TASK_GROUP
     }
 
-    val pluginClassFile = intermediates.file("pluginClass").asFile
-
     val compileDex = project.tasks.register("compileDex", CompileDexTask::class.java) {
         group = TASK_GROUP
-
-        this.pluginClassFile.set(pluginClassFile)
 
         for (name in arrayOf("compileDebugJavaWithJavac", "compileDebugKotlin")) {
             val task = project.tasks.findByName(name)
@@ -62,7 +58,7 @@ internal fun registerTasks(project: Project) {
             }
         }
 
-        outputFile.set(intermediates.file("classes.dex"))
+        outputDir.set(intermediates.dir("dex"))
     }
 
     val compileResources = project.tasks.register("compileResources", CompileResourcesTask::class.java) {
@@ -90,16 +86,23 @@ internal fun registerTasks(project: Project) {
         }
     }
 
+    val extractPluginClass = project.tasks.register("extractPluginClass", ExtractPluginClassTask::class.java) {
+        dependsOn(compileDex)
+        this.inputs.setFrom(compileDex.map { it.outputs })
+        this.pluginClass.set(intermediates.file("pluginClass"))
+    }
+
     project.afterEvaluate {
         project.tasks.register(
             "make",
             if (extension.projectType.get() == ProjectType.INJECTOR) Copy::class.java else Zip::class.java
         ) {
             group = TASK_GROUP
-            dependsOn(compileDex)
+            dependsOn(compileDex, extractPluginClass)
 
             if (extension.projectType.get() == ProjectType.PLUGIN) {
                 val manifestFile = intermediates.file("manifest.json").asFile
+                val pluginClassName = extractPluginClass.get().pluginClass.get().asFile.readText()
 
                 from(manifestFile)
                 doFirst {
@@ -107,20 +110,10 @@ internal fun registerTasks(project: Project) {
                         "No version is set"
                     }
 
-                    if (extension.pluginClassName == null) {
-                        if (pluginClassFile.exists()) {
-                            extension.pluginClassName = pluginClassFile.readText()
-                        }
-                    }
-
-                    require(extension.pluginClassName != null) {
-                        "No plugin class found, make sure your plugin class is annotated with @AliucordPlugin"
-                    }
-
                     manifestFile.writeText(
                         JsonBuilder(
                             PluginManifest(
-                                pluginClassName = extension.pluginClassName!!,
+                                pluginClassName = pluginClassName,
                                 name = project.name,
                                 version = project.version.toString(),
                                 description = project.description,
@@ -138,7 +131,7 @@ internal fun registerTasks(project: Project) {
                 }
             }
 
-            from(compileDex.map { it.outputFile })
+            from(compileDex.map { it.outputs.files.singleFile })
 
             if (extension.projectType.get() == ProjectType.INJECTOR) {
                 into(project.layout.buildDirectory)

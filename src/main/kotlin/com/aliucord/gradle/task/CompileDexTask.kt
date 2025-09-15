@@ -15,7 +15,6 @@
 
 package com.aliucord.gradle.task
 
-import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
@@ -23,16 +22,13 @@ import com.android.builder.dexing.*
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.*
+import org.gradle.internal.impldep.com.google.common.io.Closer
 import org.gradle.kotlin.dsl.getByName
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.tree.ClassNode
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
-import java.util.*
-import java.util.stream.Collectors
 
 public abstract class CompileDexTask : DefaultTask() {
     @InputFiles
@@ -41,27 +37,26 @@ public abstract class CompileDexTask : DefaultTask() {
     public val input: ConfigurableFileCollection = project.objects.fileCollection()
 
     @get:OutputFile
-    public abstract val outputFile: RegularFileProperty
-
-    @get:OutputFile
-    public abstract val pluginClassFile: RegularFileProperty
+    public abstract val outputDir: DirectoryProperty
 
     @TaskAction
     public fun compileDex() {
         val android = project.extensions.getByName<BaseExtension>("android")
+        val minSdkVersion = requireNotNull(android.defaultConfig.minSdkVersion?.apiLevel) {
+            "minSdkVersion is required to compile to dex!"
+        }
 
-        val dexOutputDir = outputFile.get().asFile.parentFile
-
-        val bootClassPath = ClassFileProviderFactory(android.bootClasspath.map(File::toPath))
-        val classPath = ClassFileProviderFactory(listOf<Path>())
+        val closer = Closer.create()
         val dexBuilder = DexArchiveBuilder.createD8DexBuilder(
             DexParameters(
-                minSdkVersion = android.defaultConfig.minSdkVersion?.apiLevel ?: 24,
+                minSdkVersion = minSdkVersion,
                 debuggable = true,
                 dexPerClass = false,
                 withDesugaring = true,
-                desugarBootclasspath = bootClassPath,
-                desugarClasspath = classPath,
+                desugarBootclasspath = ClassFileProviderFactory(android.bootClasspath.map(File::toPath))
+                    .also { closer.register(it) },
+                desugarClasspath = ClassFileProviderFactory(listOf<Path>())
+                    .also { closer.register(it) },
                 coreLibDesugarConfig = null,
                 enableApiModeling = true,
                 messageReceiver = MessageReceiverImpl(
@@ -72,53 +67,25 @@ public abstract class CompileDexTask : DefaultTask() {
         )
 
         try {
-            val fileStreams = input.map { input ->
-                ClassFileInputs.fromPath(input.toPath()).use { it.entries { _, _ -> true } }
-            }.toTypedArray()
-
-            Arrays.stream(fileStreams).flatMap { it }
-                .use { classesInput ->
-                    val files = classesInput.collect(Collectors.toList())
-
-                    dexBuilder.convert(
-                        files.stream(),
-                        dexOutputDir.toPath(),
-                        null
-                    )
-
-                    for (file in files) {
-                        val reader = ClassReader(file.readAllBytes())
-                        val classNode = ClassNode()
-
-                        reader.accept(classNode, 0)
-
-                        for (annotation in classNode.visibleAnnotations.orEmpty() + classNode.invisibleAnnotations.orEmpty()) {
-                            if (annotation.desc == "Lcom/aliucord/annotations/AliucordPlugin;") {
-                                val aliucord = project.extensions.getAliucord()
-
-                                require(aliucord.pluginClassName == null) {
-                                    "Only 1 active plugin class per project is supported"
-                                }
-
-                                for (method in classNode.methods) {
-                                    if (method.name == "getManifest" && method.desc == "()Lcom/aliucord/entities/Plugin\$Manifest;") {
-                                        throw IllegalArgumentException("Plugin class cannot override getManifest, use manifest.json system!")
-                                    }
-                                }
-
-                                aliucord.pluginClassName = classNode.name.replace('/', '.')
-                                    .also { pluginClassFile.asFile.orNull?.writeText(it) }
-                            }
-                        }
+            dexBuilder.convert(
+                input = input
+                    // For each input path...
+                    .map { path ->
+                        ClassFileInputs
+                            // ... scan for class files
+                            .fromPath(path.toPath())
+                            // ... stream opening each class file
+                            .entries { _, _ -> true }
                     }
-                }
-        } catch (e: Exception) {
-            logger.error("Failed to compile dex", e)
+                    // ... flatten class files from all inputs
+                    .stream().flatMap { it },
+                dexOutput = outputDir.asFile.get().toPath(),
+                globalSyntheticsOutput = null,
+            )
         } finally {
-            bootClassPath.close()
-            classPath.close()
+            closer.close()
         }
 
-        logger.lifecycle("Compiled dex to ${outputFile.get()}")
+        logger.lifecycle("Compiled dex to ${outputDir.asFileTree.singleFile}")
     }
 }

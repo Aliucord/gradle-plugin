@@ -179,7 +179,6 @@ public abstract class AliucordExtension @Inject constructor(private val project:
     // TODO: remove these
     internal val userCache = project.gradle.gradleUserHomeDir.resolve("caches").resolve("aliucord")
     internal var discord: DiscordInfo? = null
-    internal var pluginClassName: String? = null
 }
 
 // TODO: remove this
