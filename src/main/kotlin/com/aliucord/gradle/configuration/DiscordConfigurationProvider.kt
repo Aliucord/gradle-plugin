@@ -15,10 +15,7 @@
 
 package com.aliucord.gradle.configuration
 
-import com.aliucord.gradle.DiscordInfo
-import com.aliucord.gradle.createProgressLogger
-import com.aliucord.gradle.download
-import com.aliucord.gradle.getAliucord
+import com.aliucord.gradle.*
 import com.googlecode.d2j.dex.Dex2jar
 import com.googlecode.d2j.reader.BaseDexFileReader
 import com.googlecode.d2j.reader.MultiDexFileReader
@@ -50,6 +47,7 @@ class DiscordConfigurationProvider : IConfigurationProvider {
 
                 aliucordSnapshot!!
             }
+
             else -> parseInt(dependency.version)
         }
 

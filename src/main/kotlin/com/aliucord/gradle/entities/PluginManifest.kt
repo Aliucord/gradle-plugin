@@ -56,5 +56,5 @@ data class PluginManifest(
 
     val updateUrl: String?,
     val changelog: String?,
-    val changelogMedia: String?
+    val changelogMedia: String?,
 )

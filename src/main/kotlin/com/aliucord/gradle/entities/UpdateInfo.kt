@@ -20,5 +20,5 @@ data class UpdateInfo(
     var version: String? = null,
     var build: String? = null,
     var changelog: String? = null,
-    var changelogMedia: String? = null
+    var changelogMedia: String? = null,
 )

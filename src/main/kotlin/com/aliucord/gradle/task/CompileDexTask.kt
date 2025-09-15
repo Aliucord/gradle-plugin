@@ -19,9 +19,7 @@ import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
-import com.android.builder.dexing.ClassFileInputs
-import com.android.builder.dexing.DexArchiveBuilder
-import com.android.builder.dexing.DexParameters
+import com.android.builder.dexing.*
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -33,7 +31,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
-import java.util.Arrays
+import java.util.*
 import java.util.stream.Collectors
 
 abstract class CompileDexTask : DefaultTask() {
