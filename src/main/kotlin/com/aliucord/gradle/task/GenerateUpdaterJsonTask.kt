@@ -35,7 +35,7 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
         for (subproject in project.allprojects) {
             val aliucord = subproject.extensions.findAliucord() ?: continue
 
-            if (aliucord.excludeFromUpdaterJson.get()) {
+            if (!aliucord.deploy.get()) {
                 continue
             }
 
@@ -44,7 +44,8 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
                 subproject.version.toString(),
                 aliucord.buildUrl.orNull,
                 aliucord.changelog.orNull,
-                aliucord.changelogMedia.orNull
+                aliucord.changelogMedia.orNull,
+                hidden = aliucord.deployHidden.orNull,
             )
         }
 

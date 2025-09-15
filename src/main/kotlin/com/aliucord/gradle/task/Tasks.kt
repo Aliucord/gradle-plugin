@@ -16,6 +16,7 @@
 package com.aliucord.gradle.task
 
 import com.aliucord.gradle.ProjectType
+import com.aliucord.gradle.entities.Links
 import com.aliucord.gradle.entities.PluginManifest
 import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
@@ -124,7 +125,10 @@ internal fun registerTasks(project: Project) {
                                 version = project.version.toString(),
                                 description = project.description,
                                 authors = extension.authors.get(),
-                                links = extension.links,
+                                links = Links(
+                                    github = extension.githubUrl.orNull,
+                                    source = extension.sourceUrl.orNull,
+                                ),
                                 updateUrl = extension.updateUrl.orNull,
                                 changelog = extension.changelog.orNull,
                                 changelogMedia = extension.changelogMedia.orNull

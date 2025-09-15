@@ -21,4 +21,5 @@ internal data class UpdateInfo(
     var build: String? = null,
     var changelog: String? = null,
     var changelogMedia: String? = null,
+    var hidden: Boolean? = null,
 )

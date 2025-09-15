@@ -15,36 +15,16 @@
 
 package com.aliucord.gradle.entities
 
-public data class Author(
+internal data class Author(
     val name: String,
     val id: Long,
     val hyperlink: Boolean,
 )
 
-public class Links : HashMap<String?, String?>() {
-    private companion object {
-        var GITHUB = "github"
-        var SOURCE = "source"
-    }
-
-    public var github: String?
-        get() = get(GITHUB)
-        set(value) {
-            put(GITHUB, value)
-        }
-
-    public var source: String?
-        get() {
-            if (containsKey(GITHUB)) {
-                return github
-            }
-
-            return get(SOURCE)
-        }
-        set(value) {
-            put(SOURCE, value)
-        }
-}
+internal data class Links(
+    var github: String? = null,
+    var source: String? = null,
+)
 
 internal data class PluginManifest(
     val pluginClassName: String,
