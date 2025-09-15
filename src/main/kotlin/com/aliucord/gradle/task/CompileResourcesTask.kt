@@ -22,17 +22,17 @@ import org.gradle.api.tasks.*
 import org.gradle.internal.os.OperatingSystem
 import java.io.File
 
-abstract class CompileResourcesTask : Exec() {
+public abstract class CompileResourcesTask : Exec() {
     @get:InputDirectory
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
-    abstract val input: DirectoryProperty
+    public abstract val input: DirectoryProperty
 
     @get:InputFile
-    abstract val manifestFile: RegularFileProperty
+    public abstract val manifestFile: RegularFileProperty
 
     @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    public abstract val outputFile: RegularFileProperty
 
     override fun exec() {
         val android = project.extensions.getByName("android") as BaseExtension

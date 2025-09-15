@@ -26,9 +26,9 @@ import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
 
-const val TASK_GROUP = "aliucord"
+private const val TASK_GROUP = "aliucord"
 
-fun registerTasks(project: Project) {
+internal fun registerTasks(project: Project) {
     val extension = project.extensions.getAliucord()
     val intermediates = project.layout.buildDirectory.dir("intermediates").get()
 

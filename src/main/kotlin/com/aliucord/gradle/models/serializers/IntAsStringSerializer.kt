@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 /**
  * (De)serializes an integer as a string.
  */
-object IntAsStringSerializer : KSerializer<Int> {
+internal object IntAsStringSerializer : KSerializer<Int> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Int", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Int) {

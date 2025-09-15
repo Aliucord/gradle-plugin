@@ -25,9 +25,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.util.function.Function
 
-abstract class GenSourcesTask : DefaultTask() {
+public abstract class GenSourcesTask : DefaultTask() {
     @TaskAction
-    fun genSources() {
+    public fun genSources() {
         val extension = project.extensions.getAliucord()
         val discord = extension.discord!!
 

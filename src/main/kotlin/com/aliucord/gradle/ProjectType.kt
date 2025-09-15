@@ -15,7 +15,7 @@
 
 package com.aliucord.gradle
 
-enum class ProjectType {
+public enum class ProjectType {
     PLUGIN,
     CORE,
     INJECTOR

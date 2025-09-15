@@ -15,7 +15,7 @@
 
 package com.aliucord.gradle.entities
 
-data class UpdateInfo(
+internal data class UpdateInfo(
     var minimumDiscordVersion: Int? = null,
     var version: String? = null,
     var build: String? = null,

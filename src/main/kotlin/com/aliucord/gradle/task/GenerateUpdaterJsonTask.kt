@@ -24,12 +24,12 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-abstract class GenerateUpdaterJsonTask : DefaultTask() {
+public abstract class GenerateUpdaterJsonTask : DefaultTask() {
     @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    public abstract val outputFile: RegularFileProperty
 
     @TaskAction
-    fun generateUpdaterJson() {
+    public fun generateUpdaterJson() {
         val map = HashMap<String, UpdateInfo>()
 
         for (subproject in project.allprojects) {

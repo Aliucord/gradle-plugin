@@ -34,20 +34,20 @@ import java.nio.file.Path
 import java.util.*
 import java.util.stream.Collectors
 
-abstract class CompileDexTask : DefaultTask() {
+public abstract class CompileDexTask : DefaultTask() {
     @InputFiles
     @SkipWhenEmpty
     @IgnoreEmptyDirectories
-    val input: ConfigurableFileCollection = project.objects.fileCollection()
+    public val input: ConfigurableFileCollection = project.objects.fileCollection()
 
     @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    public abstract val outputFile: RegularFileProperty
 
     @get:OutputFile
-    abstract val pluginClassFile: RegularFileProperty
+    public abstract val pluginClassFile: RegularFileProperty
 
     @TaskAction
-    fun compileDex() {
+    public fun compileDex() {
         val android = project.extensions.getByName<BaseExtension>("android")
 
         val dexOutputDir = outputFile.get().asFile.parentFile

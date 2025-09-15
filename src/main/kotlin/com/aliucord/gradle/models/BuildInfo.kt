@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * Build info for Aliucord core.
  */
 @Serializable
-data class BuildInfo(
+internal data class BuildInfo(
     @Serializable(with = IntAsStringSerializer::class)
     @SerialName("versionCode")
     val discordVersionCode: Int,

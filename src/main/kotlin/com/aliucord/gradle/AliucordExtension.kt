@@ -23,11 +23,11 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-abstract class AliucordExtension @Inject constructor(val project: Project) {
-    val projectType: Property<ProjectType> =
+public abstract class AliucordExtension @Inject constructor(private val project: Project) {
+    public val projectType: Property<ProjectType> =
         project.objects.property(ProjectType::class.java).convention(ProjectType.PLUGIN)
 
-    val authors: ListProperty<Author> = project.objects.listProperty(Author::class.java)
+    public val authors: ListProperty<Author> = project.objects.listProperty(Author::class.java)
 
     /**
      * Specify an author of this plugin.
@@ -38,10 +38,11 @@ abstract class AliucordExtension @Inject constructor(val project: Project) {
      * @param hyperlink Whether to hyperlink the Discord profile specified by [id].
      *                  Set this to false if you don't want to be spammed for support.
      */
-    fun author(name: String, id: Long = 0L, hyperlink: Boolean = true) =
+    public fun author(name: String, id: Long = 0L, hyperlink: Boolean = true) {
         authors.add(Author(name, id, hyperlink))
+    }
 
-    val links: Links = Links()
+    public val links: Links = Links()
 
     /**
      * Set the source repository of this plugin.
@@ -51,7 +52,7 @@ abstract class AliucordExtension @Inject constructor(val project: Project) {
      *
      * @param url A repository url like `https://github.com/Aliucord/plugins-template`
      */
-    fun github(url: String) {
+    public fun github(url: String) {
         links.github = url
 
         if (!updateUrl.isPresent && !buildUrl.isPresent) {
@@ -60,34 +61,33 @@ abstract class AliucordExtension @Inject constructor(val project: Project) {
         }
     }
 
-    val updateUrl: Property<String> = project.objects.property(String::class.java)
-    val changelog: Property<String> = project.objects.property(String::class.java)
-    val changelogMedia: Property<String> = project.objects.property(String::class.java)
+    public val updateUrl: Property<String> = project.objects.property(String::class.java)
+    public val changelog: Property<String> = project.objects.property(String::class.java)
+    public val changelogMedia: Property<String> = project.objects.property(String::class.java)
 
-    val minimumDiscordVersion: Property<Int> = project.objects.property(Int::class.java)
-    val buildUrl: Property<String> = project.objects.property(String::class.java)
+    public val minimumDiscordVersion: Property<Int> = project.objects.property(Int::class.java)
+    public val buildUrl: Property<String> = project.objects.property(String::class.java)
 
-    val excludeFromUpdaterJson: Property<Boolean> = project.objects.property(Boolean::class.java).convention(false)
+    public val excludeFromUpdaterJson: Property<Boolean> = project.objects.property(Boolean::class.java).convention(false)
 
-    val userCache = project.gradle.gradleUserHomeDir.resolve("caches").resolve("aliucord")
+    internal val userCache = project.gradle.gradleUserHomeDir.resolve("caches").resolve("aliucord")
 
-    var discord: DiscordInfo? = null
-        internal set
+    internal var discord: DiscordInfo? = null
 
     internal var pluginClassName: String? = null
 }
 
-class DiscordInfo(extension: AliucordExtension, val version: Int) {
+internal class DiscordInfo(extension: AliucordExtension, val version: Int) {
     val cache = extension.userCache.resolve("discord")
 
     val apkFile = cache.resolve("discord-$version.apk")
     val jarFile = cache.resolve("discord-$version.jar")
 }
 
-fun ExtensionContainer.getAliucord(): AliucordExtension {
+public fun ExtensionContainer.getAliucord(): AliucordExtension {
     return getByName("aliucord") as AliucordExtension
 }
 
-fun ExtensionContainer.findAliucord(): AliucordExtension? {
+public fun ExtensionContainer.findAliucord(): AliucordExtension? {
     return findByName("aliucord") as AliucordExtension?
 }

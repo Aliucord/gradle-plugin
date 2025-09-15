@@ -20,7 +20,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 @Suppress("unused")
-abstract class AliucordPlugin : Plugin<Project> {
+public abstract class AliucordPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.extensions.create("aliucord", AliucordExtension::class.java, project)
         registerTasks(project)

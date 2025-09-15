@@ -28,13 +28,13 @@ import se.vidstige.jadb.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-abstract class DeployWithAdbTask : DefaultTask() {
+public abstract class DeployWithAdbTask : DefaultTask() {
     @get:Input
     @set:Option(option = "wait-for-debugger", description = "Enables debugging flag when starting the discord activity")
-    var waitForDebugger: Boolean = false
+    public var waitForDebugger: Boolean = false
 
     @TaskAction
-    fun deployWithAdb() {
+    public fun deployWithAdb() {
         if (project.name in IGNORED_PROJECTS) {
             project.logger.warn("Ignoring deployWithAdb task for a template project! " +
                 "Rename this project to something else in order to deploy it!")
