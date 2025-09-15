@@ -18,6 +18,8 @@ package com.aliucord.gradle.task
 import com.aliucord.gradle.ProjectType
 import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.AbstractCopyTask
@@ -25,6 +27,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import se.vidstige.jadb.*
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 abstract class DeployWithAdbTask : DefaultTask() {
@@ -73,7 +76,10 @@ abstract class DeployWithAdbTask : DefaultTask() {
     private fun deployCore(device: JadbDevice, file: File) {
         createAliucordDirs(device)
         device.push(file, RemoteFile("$REMOTE_ALIUCORD_DIR/Aliucord.zip"))
-        // TODO: enable core from storage
+        editAliucordSettings(device) {
+            // Force enable using custom Aliucord core
+            set("AC_from_storage", true)
+        }
         restartAliucord(device)
     }
 
@@ -86,7 +92,10 @@ abstract class DeployWithAdbTask : DefaultTask() {
     private fun deployPlugin(device: JadbDevice, file: File) {
         createAliucordDirs(device)
         device.push(file, RemoteFile("$REMOTE_ALIUCORD_DIR/plugins/${file.name}"))
-        // TODO: enable plugin in settings
+        editAliucordSettings(device) {
+            // Force enable the plugin in settings
+            set("AC_PM_${file.nameWithoutExtension}", true)
+        }
         restartAliucord(device)
     }
 
@@ -144,6 +153,40 @@ abstract class DeployWithAdbTask : DefaultTask() {
             logger.error(response)
             throw GradleException("Failed to start custom component import on device")
         }
+    }
+
+    /**
+     * Reads Aliucord core's settings from the device, then applies [block] to it,
+     * and writes it back to the device.
+     */
+    private fun editAliucordSettings(device: JadbDevice, block: (MutableMap<Any?, Any?>).() -> Unit) {
+        val settingsFile = RemoteFile("$REMOTE_ALIUCORD_DIR/settings/Aliucord.json")
+        val settings = ByteArrayOutputStream()
+
+        try {
+            device.pull(settingsFile, settings)
+        } catch (e: JadbException) {
+            if (e.message?.contains("No such file or directory") == true) {
+                settings.reset()
+            } else {
+                throw e
+            }
+        }
+
+        val json = if (settings.size() == 0) {
+            mutableMapOf<Any, Any>()
+        } else {
+            JsonSlurper().parse(settings.toByteArray()) as Map<*, *>
+        }
+        val modifiedJson = block(json.toMutableMap())
+        val outJson = JsonOutput.toJson(modifiedJson)
+
+        device.push(
+            /* source = */ outJson.byteInputStream(),
+            /* lastModified = */ System.currentTimeMillis(),
+            /* mode = */ 432, // ug=rw
+            /* remote = */ settingsFile,
+        )
     }
 
     private companion object {
