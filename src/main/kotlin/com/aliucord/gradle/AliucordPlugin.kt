@@ -15,16 +15,15 @@
 
 package com.aliucord.gradle
 
-import com.aliucord.gradle.configuration.registerConfigurations
 import com.aliucord.gradle.task.registerTasks
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
+@Suppress("unused")
 abstract class AliucordPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.extensions.create("aliucord", AliucordExtension::class.java, project)
-
         registerTasks(project)
-        registerConfigurations(project)
+        registerDiscordConfiguration(project)
     }
 }

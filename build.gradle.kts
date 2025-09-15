@@ -1,6 +1,7 @@
 plugins {
     `kotlin-dsl`
     alias(libs.plugins.publish)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -15,6 +16,7 @@ dependencies {
     implementation(libs.jadx.core)
     implementation(libs.jadx.dexInput)
     implementation(libs.jadb)
+    implementation(libs.kotlinx.serialization)
 }
 
 gradlePlugin {
