@@ -15,14 +15,14 @@
 
 package com.aliucord.gradle.task
 
-import com.aliucord.gradle.ProjectType
+import com.aliucord.gradle.*
 import com.aliucord.gradle.entities.Links
 import com.aliucord.gradle.entities.PluginManifest
-import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import groovy.json.JsonBuilder
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
@@ -45,6 +45,10 @@ internal fun registerTasks(project: Project) {
 
     project.tasks.register("genSources", GenSourcesTask::class.java) {
         group = TASK_GROUP
+
+        val discordConfiguration = project.configurations.getDiscord()
+        dependsOn(discordConfiguration)
+        this.input.set(discordConfiguration.elements.map { it.single() as RegularFile })
     }
 
     val compileDex = project.tasks.register("compileDex", CompileDexTask::class.java) {

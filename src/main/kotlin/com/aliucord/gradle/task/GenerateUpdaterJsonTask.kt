@@ -40,11 +40,11 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
             }
 
             map[subproject.name] = UpdateInfo(
-                aliucord.minimumDiscordVersion.orNull ?: aliucord.discord?.version,
-                subproject.version.toString(),
-                aliucord.buildUrl.orNull,
-                aliucord.changelog.orNull,
-                aliucord.changelogMedia.orNull,
+                minimumDiscordVersion = aliucord.minimumDiscordVersion.get(),
+                version = subproject.version.toString(),
+                build = aliucord.buildUrl.orNull,
+                changelog = aliucord.changelog.orNull,
+                changelogMedia = aliucord.changelogMedia.orNull,
                 hidden = aliucord.deployHidden.orNull,
             )
         }

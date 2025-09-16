@@ -175,16 +175,4 @@ public abstract class AliucordExtension @Inject constructor(private val project:
 
     internal val authors: ListProperty<Author> = project.objects
         .listProperty(Author::class.java)
-
-    // TODO: remove these
-    internal val userCache = project.gradle.gradleUserHomeDir.resolve("caches").resolve("aliucord")
-    internal var discord: DiscordInfo? = null
-}
-
-// TODO: remove this
-internal class DiscordInfo(extension: AliucordExtension, val version: Int) {
-    val cache = extension.userCache.resolve("discord")
-
-    val apkFile = cache.resolve("discord-$version.apk")
-    val jarFile = cache.resolve("discord-$version.jar")
 }

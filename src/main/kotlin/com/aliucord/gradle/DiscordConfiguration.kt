@@ -55,30 +55,36 @@ internal fun downloadDiscordConfigurations(project: Project) {
             ?: throw GradleException("Invalid Discord APK version code")
     }
 
-    // TODO: get rid of this
-    val paths = DiscordInfo(extension, version)
-    extension.discord = paths
+    val aliucordCacheDir = project.gradle.gradleUserHomeDir
+        .resolve("caches")
+        .resolve("aliucord")
+
+    val apkFile = aliucordCacheDir.resolve("discord-${version}.apk")
+    val jarFile = aliucordCacheDir.resolve("discord-${version}.jar")
 
     // Download APK from Aliucord's mirror
-    if (!paths.apkFile.exists() && !paths.jarFile.exists()) {
-        paths.cache.mkdirs()
+    if (!apkFile.exists() && !jarFile.exists()) {
+        aliucordCacheDir.mkdirs()
         downloadFromStream(
-            url = String.format(APK_URL, paths.version),
-            output = paths.apkFile,
-            progressLogger = createProgressLogger(project, "Download Discord v${paths.version}"),
+            url = String.format(APK_URL, version),
+            output = apkFile,
+            progressLogger = createProgressLogger(project, "Download Discord v${version}"),
         )
     }
 
-    if (!paths.jarFile.exists()) {
+    if (!jarFile.exists()) {
         project.logger.lifecycle("Converting Discord APK to jar")
 
-        Dex2jar.from(MultiDexFileReader.open(paths.apkFile.inputStream()))
+        Dex2jar.from(MultiDexFileReader.open(apkFile.inputStream()))
             .skipDebug(false)
             .topoLogicalSort()
             .noCode(true)
-            .to(paths.jarFile.toPath())
+            .to(jarFile.toPath())
     }
 
+    if (!extension.minimumDiscordVersion.isPresent)
+        extension.minimumDiscordVersion.set(version)
+
     // TODO: use addProvider to make resolving dependencies lazy
-    project.dependencies.add("compileOnly", project.files(paths.jarFile))
+    project.dependencies.add("compileOnly", project.files(jarFile))
 }

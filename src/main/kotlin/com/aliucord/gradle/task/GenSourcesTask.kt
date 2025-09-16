@@ -15,39 +15,50 @@
 
 package com.aliucord.gradle.task
 
-import com.aliucord.gradle.getAliucord
 import jadx.api.JadxArgs
 import jadx.api.JadxDecompiler
 import jadx.api.impl.NoOpCodeCache
 import jadx.api.impl.SimpleCodeWriter
 import jadx.plugins.input.dex.DexInputPlugin
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.*
 import java.util.function.Function
 
 public abstract class GenSourcesTask : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    public abstract val input: RegularFileProperty
+
+    @get:OutputFile
+    public abstract val sourcesJar: RegularFileProperty
+
     @TaskAction
     public fun genSources() {
-        val extension = project.extensions.getAliucord()
-        val discord = extension.discord!!
+        val inputFile = input.get().asFile
+        val outputFile = inputFile.resolveSibling(inputFile.nameWithoutExtension + "-sources.jar")
 
-        val sourcesJarFile = discord.cache.resolve("discord-${discord.version}-sources.jar")
+        sourcesJar.set(outputFile)
 
-        val args = JadxArgs()
-        args.setInputFile(discord.apkFile)
-        args.outDirSrc = sourcesJarFile
-        args.isSkipResources = true
-        args.isShowInconsistentCode = true
-        args.isRespectBytecodeAccModifiers = true
-        args.isFsCaseSensitive = true
-        args.isGenerateKotlinMetadata = false
-        args.isDebugInfo = false
-        args.isInlineAnonymousClasses = false
-        args.isInlineMethods = false
-        args.isReplaceConsts = false
-
-        args.codeCache = NoOpCodeCache()
-        args.codeWriterProvider = Function { SimpleCodeWriter(it) }
+        val args = JadxArgs().apply {
+            setInputFile(inputFile)
+            outDirSrc = outputFile
+            isSkipResources = true
+            isShowInconsistentCode = true
+            isRespectBytecodeAccModifiers = true
+            isFsCaseSensitive = true
+            isGenerateKotlinMetadata = false // Aliucord JADX specific, omit Kotlin @Metadata
+            isDebugInfo = false
+            isInlineAnonymousClasses = false
+            isInlineMethods = false
+            isReplaceConsts = false
+            codeCache = NoOpCodeCache()
+            codeWriterProvider = Function { SimpleCodeWriter(it) }
+            threadsCount = Runtime.getRuntime()
+                .availableProcessors()
+                .minus(1)
+                .coerceAtLeast(1)
+        }
 
         JadxDecompiler(args).use { decompiler ->
             decompiler.registerPlugin(DexInputPlugin())
