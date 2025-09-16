@@ -55,16 +55,13 @@ internal fun downloadDiscordConfigurations(project: Project) {
             ?: throw GradleException("Invalid Discord APK version code")
     }
 
-    val aliucordCacheDir = project.gradle.gradleUserHomeDir
-        .resolve("caches")
-        .resolve("aliucord")
-
-    val apkFile = aliucordCacheDir.resolve("discord-${version}.apk")
-    val jarFile = aliucordCacheDir.resolve("discord-${version}.jar")
+    val discordCacheDir = project.gradle.gradleUserHomeDir.resolve("caches/aliucord/discord")
+    val apkFile = discordCacheDir.resolve("discord-${version}.apk")
+    val jarFile = discordCacheDir.resolve("discord-${version}.jar")
 
     // Download APK from Aliucord's mirror
     if (!apkFile.exists() && !jarFile.exists()) {
-        aliucordCacheDir.mkdirs()
+        discordCacheDir.mkdirs()
         downloadFromStream(
             url = String.format(APK_URL, version),
             output = apkFile,
@@ -75,7 +72,7 @@ internal fun downloadDiscordConfigurations(project: Project) {
     if (!jarFile.exists()) {
         project.logger.lifecycle("Converting Discord APK to jar")
 
-        Dex2jar.from(MultiDexFileReader.open(apkFile.inputStream()))
+        Dex2jar.from(MultiDexFileReader.open(apkFile.readBytes()))
             .skipDebug(false)
             .topoLogicalSort()
             .noCode(true)
