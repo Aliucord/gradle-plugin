@@ -17,8 +17,7 @@ package com.aliucord.gradle.task
 
 import com.aliucord.gradle.entities.UpdateInfo
 import com.aliucord.gradle.findAliucord
-import groovy.json.JsonBuilder
-import groovy.json.JsonGenerator
+import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
@@ -49,14 +48,6 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
             )
         }
 
-        // TODO figure out a way to use default in updater.json
-        outputFile.asFile.get().writeText(
-            JsonBuilder(
-                map,
-                JsonGenerator.Options()
-                    .excludeNulls()
-                    .build()
-            ).toString()
-        )
+        outputFile.asFile.get().writeText(Json.encodeToString(map))
     }
 }

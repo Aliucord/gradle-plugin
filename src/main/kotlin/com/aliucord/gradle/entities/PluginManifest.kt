@@ -15,17 +15,22 @@
 
 package com.aliucord.gradle.entities
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 internal data class Author(
     val name: String,
     val id: Long,
     val hyperlink: Boolean,
 )
 
+@Serializable
 internal data class Links(
     var github: String? = null,
     var source: String? = null,
 )
 
+@Serializable
 internal data class PluginManifest(
     val pluginClassName: String,
     val name: String,

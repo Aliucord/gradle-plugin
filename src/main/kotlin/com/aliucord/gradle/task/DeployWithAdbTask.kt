@@ -18,8 +18,7 @@ package com.aliucord.gradle.task
 import com.aliucord.gradle.ProjectType
 import com.aliucord.gradle.getAliucord
 import com.android.build.gradle.BaseExtension
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.*
@@ -178,12 +177,12 @@ public abstract class DeployWithAdbTask : DefaultTask() {
         }
 
         val json = if (settings.size() == 0) {
-            mutableMapOf<Any, Any>()
+            mutableMapOf()
         } else {
-            JsonSlurper().parse(settings.toByteArray()) as Map<*, *>
+            Json.decodeFromString<Map<Any, Any>>(settings.toString(Charsets.UTF_8))
         }
         val modifiedJson = block(json.toMutableMap())
-        val outJson = JsonOutput.toJson(modifiedJson)
+        val outJson = Json.encodeToString(modifiedJson)
 
         device.push(
             /* source = */ outJson.byteInputStream(),

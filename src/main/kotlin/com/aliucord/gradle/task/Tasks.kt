@@ -20,7 +20,7 @@ import com.aliucord.gradle.entities.Links
 import com.aliucord.gradle.entities.PluginManifest
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.tasks.ProcessLibraryManifest
-import groovy.json.JsonBuilder
+import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.AbstractCopyTask
@@ -114,24 +114,21 @@ internal fun registerTasks(project: Project) {
                         "No version is set"
                     }
 
-                    manifestFile.writeText(
-                        JsonBuilder(
-                            PluginManifest(
-                                pluginClassName = pluginClassName,
-                                name = project.name,
-                                version = project.version.toString(),
-                                description = project.description,
-                                authors = extension.authors.get(),
-                                links = Links(
-                                    github = extension.githubUrl.orNull,
-                                    source = extension.sourceUrl.orNull,
-                                ),
-                                updateUrl = extension.updateUrl.orNull,
-                                changelog = extension.changelog.orNull,
-                                changelogMedia = extension.changelogMedia.orNull
-                            )
-                        ).toPrettyString()
+                    val manifest = PluginManifest(
+                        pluginClassName = pluginClassName,
+                        name = project.name,
+                        version = project.version.toString(),
+                        description = project.description,
+                        authors = extension.authors.get(),
+                        links = Links(
+                            github = extension.githubUrl.orNull,
+                            source = extension.sourceUrl.orNull,
+                        ),
+                        updateUrl = extension.updateUrl.orNull,
+                        changelog = extension.changelog.orNull,
+                        changelogMedia = extension.changelogMedia.orNull
                     )
+                    manifestFile.writeText(Json.encodeToString(manifest))
                 }
             }
 

@@ -15,6 +15,9 @@
 
 package com.aliucord.gradle.entities
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 internal data class UpdateInfo(
     var minimumDiscordVersion: Int? = null,
     var version: String? = null,
