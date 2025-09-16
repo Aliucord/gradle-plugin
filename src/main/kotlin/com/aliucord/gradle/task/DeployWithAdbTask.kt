@@ -15,14 +15,14 @@
 
 package com.aliucord.gradle.task
 
-import com.aliucord.gradle.ProjectType
-import com.aliucord.gradle.getAliucord
+import com.aliucord.gradle.plugins.*
 import com.android.build.gradle.BaseExtension
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
+import org.gradle.kotlin.dsl.getByName
 import se.vidstige.jadb.*
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -40,8 +40,8 @@ public abstract class DeployWithAdbTask : DefaultTask() {
             return
         }
 
-        val extension = project.extensions.getAliucord()
-        val android = project.extensions.getByName("android") as BaseExtension
+        val plugins = project.plugins
+        val android = project.extensions.getByName<BaseExtension>("android")
 
         AdbServerLauncher(Subprocess(), android.adbExecutable.absolutePath).launch()
         val jadbConnection = JadbConnection()
@@ -63,14 +63,14 @@ public abstract class DeployWithAdbTask : DefaultTask() {
 
         var file = make.outputs.files.singleFile
 
-        if (extension.projectType.get() == ProjectType.INJECTOR) {
+        if (plugins.hasPlugin(AliucordInjectorGradle::class.java)) {
             file = file.resolve("Injector.dex")
         }
 
-        when (extension.projectType.get()) {
-            ProjectType.CORE -> deployCore(device, file)
-            ProjectType.INJECTOR -> deployInjector(device, file)
-            ProjectType.PLUGIN -> deployPlugin(device, file)
+        when {
+            plugins.hasPlugin(AliucordCoreGradle::class.java) -> deployCore(device, file)
+            plugins.hasPlugin(AliucordInjectorGradle::class.java) -> deployInjector(device, file)
+            plugins.hasPlugin(AliucordPluginGradle::class.java) -> deployPlugin(device, file)
         }
 
         logger.lifecycle("Deployed $file to ${device.serial}")

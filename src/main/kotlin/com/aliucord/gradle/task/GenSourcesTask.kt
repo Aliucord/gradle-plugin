@@ -28,17 +28,17 @@ import java.util.function.Function
 public abstract class GenSourcesTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    public abstract val input: RegularFileProperty
+    public abstract val inputAPK: RegularFileProperty
 
     @get:OutputFile
-    public abstract val sourcesJar: RegularFileProperty
+    public abstract val outputJar: RegularFileProperty
 
     @TaskAction
     public fun genSources() {
-        val inputFile = input.get().asFile
+        val inputFile = inputAPK.get().asFile
         val outputFile = inputFile.resolveSibling(inputFile.nameWithoutExtension + "-sources.jar")
 
-        sourcesJar.set(outputFile)
+        outputJar.set(outputFile)
 
         val args = JadxArgs().apply {
             setInputFile(inputFile)
