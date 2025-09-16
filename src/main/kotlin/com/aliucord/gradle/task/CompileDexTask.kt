@@ -24,11 +24,12 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.*
-import org.gradle.internal.impldep.com.google.common.io.Closer
 import org.gradle.kotlin.dsl.getByName
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
+
+// TODO: include `implementation` dependencies when building
 
 public abstract class CompileDexTask : DefaultTask() {
     @InputFiles
@@ -36,7 +37,7 @@ public abstract class CompileDexTask : DefaultTask() {
     @IgnoreEmptyDirectories
     public val input: ConfigurableFileCollection = project.objects.fileCollection()
 
-    @get:OutputFile
+    @get:OutputDirectory
     public abstract val outputDir: DirectoryProperty
 
     @TaskAction
@@ -46,17 +47,17 @@ public abstract class CompileDexTask : DefaultTask() {
             "minSdkVersion is required to compile to dex!"
         }
 
-        val closer = Closer.create()
+        val bootClasspath = ClassFileProviderFactory(android.bootClasspath.map(File::toPath))
+        val classpath = ClassFileProviderFactory(listOf<Path>())
+
         val dexBuilder = DexArchiveBuilder.createD8DexBuilder(
             DexParameters(
                 minSdkVersion = minSdkVersion,
                 debuggable = true,
                 dexPerClass = false,
                 withDesugaring = true,
-                desugarBootclasspath = ClassFileProviderFactory(android.bootClasspath.map(File::toPath))
-                    .also { closer.register(it) },
-                desugarClasspath = ClassFileProviderFactory(listOf<Path>())
-                    .also { closer.register(it) },
+                desugarBootclasspath = bootClasspath,
+                desugarClasspath = classpath,
                 coreLibDesugarConfig = null,
                 enableApiModeling = true,
                 messageReceiver = MessageReceiverImpl(
@@ -67,8 +68,10 @@ public abstract class CompileDexTask : DefaultTask() {
         )
 
         try {
+            outputDir.asFile.get().mkdirs()
+
             dexBuilder.convert(
-                input = input
+                input = input.asFileTree
                     // For each input path...
                     .map { path ->
                         ClassFileInputs
@@ -83,9 +86,8 @@ public abstract class CompileDexTask : DefaultTask() {
                 globalSyntheticsOutput = null,
             )
         } finally {
-            closer.close()
+            bootClasspath.close()
+            classpath.close()
         }
-
-        logger.lifecycle("Compiled dex to ${outputDir.asFileTree.singleFile}")
     }
 }

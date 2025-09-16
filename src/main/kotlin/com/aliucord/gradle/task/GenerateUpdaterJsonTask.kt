@@ -20,11 +20,11 @@ import com.aliucord.gradle.findAliucord
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 public abstract class GenerateUpdaterJsonTask : DefaultTask() {
     @get:OutputFile
+    @get:PathSensitive(PathSensitivity.NONE)
     public abstract val outputFile: RegularFileProperty
 
     @TaskAction

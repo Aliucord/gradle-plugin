@@ -32,7 +32,7 @@ internal fun registerDiscordConfiguration(project: Project) {
 @OptIn(ExperimentalSerializationApi::class)
 internal fun downloadDiscordConfigurations(project: Project) {
     val configuration = project.configurations.getDiscord()
-    val extension = project.extensions.getAliucord()
+    val extension = project.extensions.findAliucord()
 
     require(configuration.dependencies.size <= 1) {
         "Only one Discord dependency is allowed per project but ${configuration.dependencies.size} were present!"
@@ -79,7 +79,7 @@ internal fun downloadDiscordConfigurations(project: Project) {
             .to(jarFile.toPath())
     }
 
-    if (!extension.minimumDiscordVersion.isPresent)
+    if (extension?.minimumDiscordVersion?.isPresent == true)
         extension.minimumDiscordVersion.set(version)
 
     // TODO: use addProvider to make resolving dependencies lazy

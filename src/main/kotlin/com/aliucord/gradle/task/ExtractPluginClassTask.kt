@@ -23,18 +23,23 @@ public abstract class ExtractPluginClassTask : DefaultTask() {
     @TaskAction
     public fun extract() {
         // Open a reader for all dex files from the input
-        val readers = inputs
+        val readers = inputs.asFileTree
             .asSequence()
             .filter { it.extension == "dex" }
             .map(::DexFileReader)
+
         // Get the root node and flatten all classes
+        val readerFlags = DexFileReader.SKIP_CODE or
+            DexFileReader.SKIP_DEBUG or
+            DexFileReader.SKIP_EXCEPTION or
+            DexFileReader.SKIP_FIELD_CONSTANT
         val classes = readers
-            .map { reader -> DexFileNode().also { node -> reader.accept(node) } }
+            .map { reader -> DexFileNode().also { node -> reader.accept(node, readerFlags) } }
             .flatMap { it.clzs }
 
         // Find all classes annotated with @AliucordPlugin
         val pluginClasses = classes
-            .filter { it.anns.any { it.type == "Lcom/aliucord/annotations/AliucordPlugin;" } }
+            .filter { cls -> cls.anns?.any { ann -> ann.type == "Lcom/aliucord/annotations/AliucordPlugin;" } == true }
             .toList()
 
         require(pluginClasses.isNotEmpty()) {
@@ -61,6 +66,7 @@ public abstract class ExtractPluginClassTask : DefaultTask() {
 
         val pluginClassName = pluginClasses.single()
             .className
+            .removeSurrounding("L", ";")
             .replace('/', '.')
 
         this.pluginClass.get().asFile.writeText(pluginClassName)
