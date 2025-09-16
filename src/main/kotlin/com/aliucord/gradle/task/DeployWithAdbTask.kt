@@ -34,12 +34,6 @@ public abstract class DeployWithAdbTask : DefaultTask() {
 
     @TaskAction
     public fun deployWithAdb() {
-        if (project.name in IGNORED_PROJECTS) {
-            project.logger.warn("Ignoring deployWithAdb task for a template project! " +
-                "Rename this project to something else in order to deploy it!")
-            return
-        }
-
         val extension = project.extensions.getAliucord()
         val android = project.extensions.getByName("android") as BaseExtension
 
@@ -195,15 +189,5 @@ public abstract class DeployWithAdbTask : DefaultTask() {
     private companion object {
         const val REMOTE_ALIUCORD_DIR = "/storage/emulated/0/Aliucord"
         const val REMOTE_TMP = "/data/local/tmp"
-
-        /**
-         * Ignore projects from templates to prevent junk plugins from being deployed to the device.
-         */
-        val IGNORED_PROJECTS = arrayOf(
-            "MyFirstCommand",
-            "MyFirstPatch",
-            "MyFirstJavaPlugin",
-            "MyFirstKotlinPlugin",
-        )
     }
 }
