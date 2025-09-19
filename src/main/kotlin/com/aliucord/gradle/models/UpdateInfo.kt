@@ -25,4 +25,5 @@ internal data class UpdateInfo(
     var changelog: String? = null,
     var changelogMedia: String? = null,
     var hidden: Boolean? = false,
+    var crc32: String? = null,
 )

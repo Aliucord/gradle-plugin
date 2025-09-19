@@ -6,6 +6,7 @@ import com.aliucord.gradle.models.PluginManifest
 import com.aliucord.gradle.task.*
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
 
@@ -41,6 +42,8 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                         changelogMedia.set(aliucord.changelogMedia)
                         buildUrl.set(aliucord.buildUrl)
                         minimumDiscordVersion.set(aliucord.minimumDiscordVersion)
+                        buildFile.fileProvider(project.tasks.named("make")
+                            .map { it.outputs.files.singleFile })
                     }
                 }
 

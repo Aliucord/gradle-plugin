@@ -30,7 +30,7 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
         // Since the `implementation` is non-resolvable, wrap it in another configuration
         val implementationArtifacts = project.configurations.register("implementationArtifacts") {
             isCanBeResolved = true // Allow resolving artifacts
-            isCanBeConsumed = false // Limited this project
+            isCanBeConsumed = false // Limited to this project
             isCanBeDeclared = false // No new artifacts can be added
             extendsFrom(project.configurations.getByName("implementation"))
         }
@@ -57,7 +57,6 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
                     .filter { it.extension == "jar" }
             })
 
-            // TODO: test this for java-only projects
             for (task in arrayOf("compileDebugJavaWithJavac", "compileDebugKotlin"))
                 input.from(project.tasks.named(task))
         }

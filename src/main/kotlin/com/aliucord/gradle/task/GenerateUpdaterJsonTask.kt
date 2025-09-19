@@ -22,6 +22,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import java.util.zip.CRC32
 
 public abstract class GenerateUpdaterJsonTask : DefaultTask() {
     @get:OutputFile
@@ -44,6 +45,9 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
                     "A version is required to deploy an Aliucord plugin."
             }
 
+            val pluginFile = plugin.buildFile.get().asFile
+            val pluginChecksum = CRC32().apply { update(pluginFile.readBytes()) }.value.toUInt()
+
             map[plugin.name.get()] = UpdateInfo(
                 minimumDiscordVersion = plugin.minimumDiscordVersion.get(),
                 version = plugin.version.get(),
@@ -51,6 +55,7 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
                 changelog = plugin.changelog.orNull,
                 changelogMedia = plugin.changelogMedia.orNull,
                 hidden = plugin.deployHidden.orNull,
+                crc32 = pluginChecksum.toHexString(HexFormat.UpperCase),
             )
         }
 
@@ -68,5 +73,6 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
         @get:Input @get:Optional public abstract val changelogMedia: Property<String>
         @get:Input @get:Optional public abstract val buildUrl: Property<String>
         @get:Input @get:Optional public abstract val minimumDiscordVersion: Property<Int>
+        @get:InputFile @get:Optional public abstract val buildFile: RegularFileProperty
     } // @formatter:on
 }
