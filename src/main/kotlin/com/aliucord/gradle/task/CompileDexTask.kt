@@ -21,6 +21,7 @@ import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
 import com.android.builder.dexing.*
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.*
@@ -28,13 +29,11 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 
-// TODO: include `implementation` dependencies when building
-
 public abstract class CompileDexTask : DefaultTask() {
-    @InputFiles
-    @SkipWhenEmpty
-    @IgnoreEmptyDirectories
-    public val input: ConfigurableFileCollection = project.objects.fileCollection()
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    @get:IgnoreEmptyDirectories
+    public abstract val input: ConfigurableFileCollection
 
     @get:OutputDirectory
     public abstract val outputDir: DirectoryProperty
@@ -52,6 +51,13 @@ public abstract class CompileDexTask : DefaultTask() {
 
     @TaskAction
     public fun compileDex() {
+        val illegalDependencies = arrayOf("kotlin-stdlib", "material", "constraintlayout", "appcompat")
+        val illegalDependency = input.asFileTree.find { f -> illegalDependencies.any { f.name.startsWith(it) } }
+        if (illegalDependency != null)
+            throw GradleException("${illegalDependency.name} is defined as an 'implementation' dependency! " +
+                "It should be explicitly defined as a 'compileOnly' dependency! " +
+                "Please read the Aliucord Gradle plugin v2 migration guide!")
+
         val bootClasspath = ClassFileProviderFactory(bootClasspath)
         val classpath = ClassFileProviderFactory(listOf<Path>())
 

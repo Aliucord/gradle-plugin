@@ -23,20 +23,46 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
         }
     }
 
+    @Suppress("UnstableApiUsage")
     public fun registerCompileDexTask(project: Project): TaskProvider<CompileDexTask> {
         val intermediates = project.layout.buildDirectory.dir("intermediates")
 
-        return project.tasks.register("compileDex", CompileDexTask::class.java) {
+        // Since the `implementation` is non-resolvable, wrap it in another configuration
+        val implementationArtifacts = project.configurations.register("implementationArtifacts") {
+            isCanBeResolved = true // Allow resolving artifacts
+            isCanBeConsumed = false // Limited this project
+            isCanBeDeclared = false // No new artifacts can be added
+            extendsFrom(project.configurations.getByName("implementation"))
+        }
+
+        val flattenDependenciesTask = project.tasks.register(
+            "flattenAarDependencies",
+            FlattenAarDependencies::class.java,
+        ) {
+            group = Constants.TASK_GROUP_INTERNAL
+            outputDir.set(intermediates.map { it.dir("dex_dependencies") })
+            dependencies.from(implementationArtifacts.map { configuration ->
+                configuration.incoming.files
+                    .filter { it.extension == "aar" }
+            })
+        }
+
+        val compileDexTask = project.tasks.register("compileDex", CompileDexTask::class.java) {
             group = Constants.TASK_GROUP_INTERNAL
             outputDir.set(intermediates.map { it.dir("dex") })
 
-            for (name in arrayOf("compileDebugJavaWithJavac", "compileDebugKotlin")) {
-                project.tasks.findByName(name)?.let { task ->
-                    dependsOn(task)
-                    input.from(task.outputs)
-                }
-            }
+            input.from(flattenDependenciesTask)
+            input.from(implementationArtifacts.map { configuration ->
+                configuration.incoming.files
+                    .filter { it.extension == "jar" }
+            })
+
+            // TODO: test this for java-only projects
+            for (task in arrayOf("compileDebugJavaWithJavac", "compileDebugKotlin"))
+                input.from(project.tasks.named(task))
         }
+
+        return compileDexTask
     }
 
     public fun registerCompileResourcesTask(project: Project): TaskProvider<CompileResourcesTask> {
