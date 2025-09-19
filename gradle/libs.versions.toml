@@ -1,8 +1,8 @@
 [versions]
 agp = "8.13.0"
-dex2jar = "2.4-SNAPSHOT"
-jadb = "1.2.1-SNAPSHOT"
-jadx = "1.4.5-SNAPSHOT"
+dex2jar = "2.4.0"
+jadb = "1.2.1"
+jadx = "1.4.5"
 kotlin = "2.2.0"
 kotlinx-serialization = "1.9.0"
 publish = "0.34.0"
@@ -14,7 +14,7 @@ android-sdk = { module = "com.android.tools:sdk-common", version.ref = "sdk" }
 dex2jar = { module = "com.aliucord.d2j:dex-translator", version.ref = "dex2jar" }
 jadx-core = { module = "com.aliucord.jadx:jadx-core", version.ref = "jadx" }
 jadx-dexInput = { module = "com.aliucord.jadx:jadx-dex-input", version.ref = "jadx" }
-jadb = { module = "se.vidstige:jadb", version.ref = "jadb" }
+jadb = { module = "com.aliucord:jadb", version.ref = "jadb" }
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]

@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     `kotlin-dsl`
     alias(libs.plugins.publish)
@@ -39,16 +41,17 @@ gradlePlugin {
 
 mavenPublishing {
     coordinates("com.aliucord", "gradle", "2.0.0")
+    configureBasedOnAppliedPlugins()
 }
 
 publishing {
     repositories {
         maven {
             name = "aliucord"
-            url = uri("https://maven.aliucord.com/snapshots")
+            url = uri("https://maven.aliucord.com/releases")
             credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
+                username = System.getenv("MAVEN_RELEASE_USERNAME")
+                password = System.getenv("MAVEN_RELEASE_PASSWORD")
             }
         }
     }
