@@ -15,7 +15,7 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
     public fun registerDecompileTask(project: Project): TaskProvider<GenSourcesTask> {
         return project.tasks.register("decompileDiscord", GenSourcesTask::class.java) {
             group = Constants.TASK_GROUP
-            inputAPK.set(project.configurations
+            inputApk.set(project.configurations
                 .getDiscord().elements
                 .map { it.single() as RegularFile })
         }

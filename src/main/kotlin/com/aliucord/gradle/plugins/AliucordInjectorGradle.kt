@@ -28,7 +28,7 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
             group = Constants.TASK_GROUP
             from(compileDexTask.map { it.outputs.files.singleFile })
             into(project.layout.buildDirectory)
-            rename { return@rename "Injector.dex" }
+            rename { "Injector.dex" }
         }
 
         // Deployment

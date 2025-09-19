@@ -28,14 +28,14 @@ import java.util.function.Function
 public abstract class GenSourcesTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    public abstract val inputAPK: RegularFileProperty
+    public abstract val inputApk: RegularFileProperty
 
     @get:OutputFile
     public abstract val outputJar: RegularFileProperty
 
     @TaskAction
     public fun genSources() {
-        val inputFile = inputAPK.get().asFile
+        val inputFile = inputApk.get().asFile
         val outputFile = inputFile.resolveSibling(inputFile.nameWithoutExtension + "-sources.jar")
 
         outputJar.set(outputFile)

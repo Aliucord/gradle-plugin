@@ -55,11 +55,7 @@ public abstract class DeployWithAdbTask : DefaultTask() {
 
         val make = project.tasks.getByName("make") as AbstractCopyTask
 
-        var file = make.outputs.files.singleFile
-
-        if (plugins.hasPlugin(AliucordInjectorGradle::class.java)) {
-            file = file.resolve("Injector.dex")
-        }
+        val file = make.outputs.files.asFileTree.singleFile
 
         when {
             plugins.hasPlugin(AliucordCoreGradle::class.java) -> deployCore(device, file)
