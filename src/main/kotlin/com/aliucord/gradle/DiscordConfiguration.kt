@@ -79,7 +79,7 @@ internal fun downloadDiscordConfigurations(project: Project) {
             .to(jarFile.toPath())
     }
 
-    if (extension?.minimumDiscordVersion?.isPresent == true)
+    if (extension?.minimumDiscordVersion?.isPresent == false)
         extension.minimumDiscordVersion.set(version)
 
     // TODO: use addProvider to make resolving dependencies lazy

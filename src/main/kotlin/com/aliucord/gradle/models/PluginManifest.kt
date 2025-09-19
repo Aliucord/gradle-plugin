@@ -13,7 +13,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.aliucord.gradle.entities
+package com.aliucord.gradle.models
 
 import kotlinx.serialization.Serializable
 

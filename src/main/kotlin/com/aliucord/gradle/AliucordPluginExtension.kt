@@ -15,7 +15,7 @@
 
 package com.aliucord.gradle
 
-import com.aliucord.gradle.entities.Author
+import com.aliucord.gradle.models.Author
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.provider.ListProperty

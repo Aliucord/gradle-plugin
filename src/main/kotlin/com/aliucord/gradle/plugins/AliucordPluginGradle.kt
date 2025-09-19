@@ -1,8 +1,8 @@
 package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.*
-import com.aliucord.gradle.entities.Links
-import com.aliucord.gradle.entities.PluginManifest
+import com.aliucord.gradle.models.Links
+import com.aliucord.gradle.models.PluginManifest
 import com.aliucord.gradle.task.*
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
@@ -16,22 +16,43 @@ import org.gradle.api.tasks.bundling.ZipEntryCompression
 @Suppress("unused")
 public abstract class AliucordPluginGradle : AliucordBaseGradle() {
     override fun apply(project: Project) {
-        project.extensions.create("aliucord", AliucordExtension::class.java, project)
-        registerTasks(project)
-        registerDiscordConfiguration(project)
+        if (project == project.rootProject) {
+            registerRootTasks(project)
+        } else {
+            project.extensions.create("aliucord", AliucordExtension::class.java, project)
+            registerTasks(project)
+            registerDiscordConfiguration(project)
+        }
+    }
+
+    protected fun registerRootTasks(rootProject: Project) {
+        rootProject.tasks.register("generateUpdaterJson", GenerateUpdaterJsonTask::class.java) {
+            val plugins = rootProject.allprojects
+                .filter { it.extensions.findAliucord() != null }
+                .map { project ->
+                    project.objects.newInstance(GenerateUpdaterJsonTask.PluginInfo::class.java).apply {
+                        name.set(project.provider { project.name })
+                        version.set(project.provider { project.version.toString() })
+
+                        val aliucord = project.extensions.getAliucord()
+                        deploy.set(aliucord.deploy)
+                        deployHidden.set(aliucord.deployHidden)
+                        changelog.set(aliucord.changelog)
+                        changelogMedia.set(aliucord.changelogMedia)
+                        buildUrl.set(aliucord.buildUrl)
+                        minimumDiscordVersion.set(aliucord.minimumDiscordVersion)
+                    }
+                }
+
+            group = Constants.TASK_GROUP_INTERNAL
+            outputFile.set(rootProject.layout.buildDirectory.file("updater.json"))
+            pluginConfigs.set(plugins)
+        }
     }
 
     protected fun registerTasks(project: Project) {
         val extension = project.extensions.getAliucord()
         val intermediates = project.layout.buildDirectory.dir("intermediates")
-
-        // Plugin updater generation
-        if (project.rootProject.tasks.findByName("generateUpdaterJson") == null) {
-            project.rootProject.tasks.register("generateUpdaterJson", GenerateUpdaterJsonTask::class.java) {
-                group = Constants.TASK_GROUP
-                outputFile.set(project.layout.buildDirectory.file("updater.json"))
-            }
-        }
 
         registerDecompileTask(project)
 
@@ -55,10 +76,6 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             archiveBaseName.set(project.name)
             archiveVersion.set("")
             destinationDirectory.set(project.layout.buildDirectory)
-
-            require(project.version != "unspecified") {
-                "No project version is set! A version is required to package an Aliucord plugin."
-            }
 
             val manifestFile = intermediates.map { it.file("manifest.json") }
             val pluginClassNameFile = extractPluginClassTask.flatMap { it.pluginClass }

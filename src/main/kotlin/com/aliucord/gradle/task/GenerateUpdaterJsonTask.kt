@@ -15,39 +15,58 @@
 
 package com.aliucord.gradle.task
 
-import com.aliucord.gradle.entities.UpdateInfo
-import com.aliucord.gradle.findAliucord
+import com.aliucord.gradle.models.UpdateInfo
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 public abstract class GenerateUpdaterJsonTask : DefaultTask() {
     @get:OutputFile
-    @get:PathSensitive(PathSensitivity.NONE)
     public abstract val outputFile: RegularFileProperty
+
+    @get:Nested
+    public abstract val pluginConfigs: ListProperty<PluginInfo>
 
     @TaskAction
     public fun generateUpdaterJson() {
         val map = HashMap<String, UpdateInfo>()
 
-        for (subproject in project.allprojects) {
-            val aliucord = subproject.extensions.findAliucord() ?: continue
-
-            if (!aliucord.deploy.get()) {
+        for (plugin in pluginConfigs.get()) {
+            if (!plugin.deploy.get()) {
                 continue
             }
 
-            map[subproject.name] = UpdateInfo(
-                minimumDiscordVersion = aliucord.minimumDiscordVersion.get(),
-                version = subproject.version.toString(),
-                build = aliucord.buildUrl.orNull,
-                changelog = aliucord.changelog.orNull,
-                changelogMedia = aliucord.changelogMedia.orNull,
-                hidden = aliucord.deployHidden.orNull,
+            require(plugin.version.get() != "unspecified") {
+                "No project version is set for plugin '${plugin.name.get()}'! " +
+                    "A version is required to deploy an Aliucord plugin."
+            }
+
+            map[plugin.name.get()] = UpdateInfo(
+                minimumDiscordVersion = plugin.minimumDiscordVersion.get(),
+                version = plugin.version.get(),
+                build = plugin.buildUrl.orNull,
+                changelog = plugin.changelog.orNull,
+                changelogMedia = plugin.changelogMedia.orNull,
+                hidden = plugin.deployHidden.orNull,
             )
         }
 
         outputFile.get().asFile.writeText(Json.encodeToString(map))
     }
+
+    // AliucordPluginExtension's properties are bound to an instance of this class
+    // in order to pass it to this task. Passing the extension directly breaks configuration caching.
+    public abstract class PluginInfo { // @formatter:off
+        @get:Input @get:Optional public abstract val name: Property<String>
+        @get:Input @get:Optional public abstract val version: Property<String>
+        @get:Input @get:Optional public abstract val deploy: Property<Boolean>
+        @get:Input @get:Optional public abstract val deployHidden: Property<Boolean>
+        @get:Input @get:Optional public abstract val changelog: Property<String>
+        @get:Input @get:Optional public abstract val changelogMedia: Property<String>
+        @get:Input @get:Optional public abstract val buildUrl: Property<String>
+        @get:Input @get:Optional public abstract val minimumDiscordVersion: Property<Int>
+    } // @formatter:on
 }

@@ -13,7 +13,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.aliucord.gradle.entities
+package com.aliucord.gradle.models
 
 import kotlinx.serialization.Serializable
 
@@ -24,5 +24,5 @@ internal data class UpdateInfo(
     var build: String? = null,
     var changelog: String? = null,
     var changelogMedia: String? = null,
-    var hidden: Boolean? = null,
+    var hidden: Boolean? = false,
 )
