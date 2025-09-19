@@ -24,6 +24,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import java.util.function.Function
+import java.util.zip.*
 
 public abstract class GenSourcesTask : DefaultTask() {
     @get:InputFile
@@ -36,10 +37,11 @@ public abstract class GenSourcesTask : DefaultTask() {
     public fun genSources() {
         val inputFile = inputApk.get().asFile
         val outputFile = outputJar.get().asFile
+        val tmpFile = outputFile.resolveSibling(outputFile.nameWithoutExtension + ".tmp.jar")
 
         val args = JadxArgs().apply {
             setInputFile(inputFile)
-            outDirSrc = outputFile
+            outDirSrc = tmpFile
             isSkipResources = true
             isShowInconsistentCode = true
             isRespectBytecodeAccModifiers = true
@@ -62,5 +64,24 @@ public abstract class GenSourcesTask : DefaultTask() {
             decompiler.load()
             decompiler.save()
         }
+
+        // Repack sources to be under src/main/java/*
+        ZipInputStream(tmpFile.inputStream()).use { zip ->
+            ZipOutputStream(outputFile.outputStream()).use { out ->
+                var entry: ZipEntry? = null
+                while (zip.nextEntry.also { entry = it } != null) {
+                    if (entry!!.isDirectory) continue
+
+                    val newEntry = ZipEntry("src/main/java/" + entry.name).apply {
+                        method = ZipEntry.DEFLATED
+                    }
+
+                    out.putNextEntry(newEntry)
+                    out.write(zip.readAllBytes())
+                    out.closeEntry()
+                }
+            }
+        }
+        tmpFile.delete()
     }
 }
