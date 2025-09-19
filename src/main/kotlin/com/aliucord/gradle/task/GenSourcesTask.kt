@@ -27,7 +27,6 @@ import java.util.function.Function
 
 public abstract class GenSourcesTask : DefaultTask() {
     @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
     public abstract val inputApk: RegularFileProperty
 
     @get:OutputFile
@@ -36,9 +35,7 @@ public abstract class GenSourcesTask : DefaultTask() {
     @TaskAction
     public fun genSources() {
         val inputFile = inputApk.get().asFile
-        val outputFile = inputFile.resolveSibling(inputFile.nameWithoutExtension + "-sources.jar")
-
-        outputJar.set(outputFile)
+        val outputFile = outputJar.get().asFile
 
         val args = JadxArgs().apply {
             setInputFile(inputFile)
@@ -47,7 +44,7 @@ public abstract class GenSourcesTask : DefaultTask() {
             isShowInconsistentCode = true
             isRespectBytecodeAccModifiers = true
             isFsCaseSensitive = true
-            isGenerateKotlinMetadata = false // Aliucord JADX specific, omit Kotlin @Metadata
+            isGenerateKotlinMetadata = true
             isDebugInfo = false
             isInlineAnonymousClasses = false
             isInlineMethods = false

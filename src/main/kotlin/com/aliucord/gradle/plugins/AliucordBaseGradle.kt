@@ -13,8 +13,13 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
             group = Constants.TASK_GROUP
 
             val discordConfiguration = project.configurations.getDiscord()
-            val discordJar = discordConfiguration.elements.map { it.single().asFile }
-            inputApk.set(project.layout.file(discordJar))
+            val discordVersion = discordConfiguration.dependencies.single().version
+
+            // This is ugly, but since resolving Discord as a dependency is a hacky workaround,
+            // this is the only way I can figure out how that contains the chaos.
+            val discordCache = project.gradle.gradleUserHomeDir.resolve("caches/aliucord/discord")
+            inputApk.set(discordCache.resolve("discord-$discordVersion.apk"))
+            outputJar.set(discordCache.resolve("discord-$discordVersion-sources.jar"))
         }
     }
 
