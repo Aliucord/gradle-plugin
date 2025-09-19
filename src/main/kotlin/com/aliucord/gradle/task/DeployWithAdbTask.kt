@@ -15,29 +15,35 @@
 
 package com.aliucord.gradle.task
 
-import com.aliucord.gradle.plugins.*
-import com.android.build.gradle.BaseExtension
+import com.aliucord.gradle.getAndroid
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
-import org.gradle.kotlin.dsl.getByName
+import org.gradle.work.DisableCachingByDefault
 import se.vidstige.jadb.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 
+@DisableCachingByDefault
 public abstract class DeployWithAdbTask : DefaultTask() {
     @get:Input
     @set:Option(option = "wait-for-debugger", description = "Enables debugging flag when starting the discord activity")
     public var waitForDebugger: Boolean = false
 
+    @get:Input
+    public abstract var deployType: String
+
+    @get:InputFile
+    public abstract val deployFile: RegularFileProperty
+
+    private val adbExecutable = project.extensions.getAndroid().adbExecutable
+
     @TaskAction
     public fun deployWithAdb() {
-        val plugins = project.plugins
-        val android = project.extensions.getByName<BaseExtension>("android")
-
-        AdbServerLauncher(Subprocess(), android.adbExecutable.absolutePath).launch()
+        AdbServerLauncher(Subprocess(), adbExecutable.absolutePath).launch()
         val jadbConnection = JadbConnection()
         val devices = jadbConnection.devices.filter {
             try {
@@ -52,15 +58,13 @@ public abstract class DeployWithAdbTask : DefaultTask() {
         }
 
         val device = devices[0]
+        val file = deployFile.get().asFile
 
-        val make = project.tasks.getByName("make") as AbstractCopyTask
-
-        val file = make.outputs.files.asFileTree.singleFile
-
-        when {
-            plugins.hasPlugin(AliucordCoreGradle::class.java) -> deployCore(device, file)
-            plugins.hasPlugin(AliucordInjectorGradle::class.java) -> deployInjector(device, file)
-            plugins.hasPlugin(AliucordPluginGradle::class.java) -> deployPlugin(device, file)
+        when (deployType) {
+            "core" -> deployCore(device, file)
+            "injector" -> deployInjector(device, file)
+            "plugin" -> deployPlugin(device, file)
+            else -> throw GradleException("Unknown deploy type '$deployType'")
         }
 
         logger.lifecycle("Deployed $file to ${device.serial}")

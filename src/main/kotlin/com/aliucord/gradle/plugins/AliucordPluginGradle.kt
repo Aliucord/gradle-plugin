@@ -7,6 +7,7 @@ import com.aliucord.gradle.task.*
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.api.tasks.bundling.ZipEntryCompression
 
 /**
  * The Gradle plugin used to build Aliucord plugins.
@@ -43,56 +44,61 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             group = Constants.TASK_GROUP_INTERNAL
             dependsOn(compileDexTask)
 
-            this.inputs.setFrom(compileDexTask.map { it.outputs })
+            this.inputs.setFrom(compileDexTask.map { it.outputs.files.singleFile })
             this.pluginClass.set(intermediates.map { it.file("pluginClass.txt") })
         }
 
         val makeTask = project.tasks.register("make", Zip::class.java) {
             group = Constants.TASK_GROUP
+            entryCompression = ZipEntryCompression.STORED
             isPreserveFileTimestamps = false
             archiveBaseName.set(project.name)
             archiveVersion.set("")
             destinationDirectory.set(project.layout.buildDirectory)
 
+            require(project.version != "unspecified") {
+                "No project version is set! A version is required to package an Aliucord plugin."
+            }
+
             val manifestFile = intermediates.map { it.file("manifest.json") }
             val pluginClassNameFile = extractPluginClassTask.flatMap { it.pluginClass }
             val resourcesFile = compileResourcesTask.flatMap { it.outputFile }
-            val resourcesFileTree = resourcesFile.map {
+            val resourcesFileTree = project.zipTree(resourcesFile)
+            val resources = resourcesFile.map {
                 if (it.asFile.exists()) {
-                    project.zipTree(it)
+                    resourcesFileTree
                 } else {
                     emptyList()
                 }
             }
 
-            dependsOn(pluginClassNameFile)
             from(manifestFile)
             from(compileDexTask.map { it.outputs.files.singleFile })
-            from(resourcesFileTree) {
+            from(resources) {
                 exclude("AndroidManifest.xml")
             }
+            dependsOn(pluginClassNameFile)
 
-            require(project.version != "unspecified") {
-                "No project version is set! A version is required to package an Aliucord plugin."
-            }
-
-            // Write manifest
+            // Write manifest to be zipped
+            val manifest = PluginManifest(
+                pluginClassName = "PLACEHOLDER",
+                name = project.name,
+                version = project.version.toString(),
+                description = project.description,
+                authors = extension.authors.get(),
+                links = Links(
+                    github = extension.githubUrl.orNull,
+                    source = extension.sourceUrl.orNull,
+                ),
+                updateUrl = extension.updateUrl.orNull,
+                changelog = extension.changelog.orNull,
+                changelogMedia = extension.changelogMedia.orNull,
+            )
             doFirst {
-                val manifest = PluginManifest(
+                val newManifest = manifest.copy(
                     pluginClassName = pluginClassNameFile.get().asFile.readText(),
-                    name = project.name,
-                    version = project.version.toString(),
-                    description = project.description,
-                    authors = extension.authors.get(),
-                    links = Links(
-                        github = extension.githubUrl.orNull,
-                        source = extension.sourceUrl.orNull,
-                    ),
-                    updateUrl = extension.updateUrl.orNull,
-                    changelog = extension.changelog.orNull,
-                    changelogMedia = extension.changelogMedia.orNull
                 )
-                manifestFile.get().asFile.writeText(Json.encodeToString(manifest))
+                manifestFile.get().asFile.writeText(Json.encodeToString(newManifest))
             }
 
             doLast {
@@ -103,7 +109,8 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         // Deployment
         project.tasks.register("deployWithAdb", DeployWithAdbTask::class.java) {
             group = Constants.TASK_GROUP
-            dependsOn(makeTask)
+            deployType = "plugin"
+            deployFile.fileProvider(makeTask.map { it.outputs.files.single() })
         }
     }
 }

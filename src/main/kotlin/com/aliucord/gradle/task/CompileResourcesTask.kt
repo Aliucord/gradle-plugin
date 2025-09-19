@@ -15,12 +15,11 @@
 
 package com.aliucord.gradle.task
 
-import com.android.build.gradle.BaseExtension
+import com.aliucord.gradle.getAndroid
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import org.gradle.internal.os.OperatingSystem
-import org.gradle.kotlin.dsl.getByName
 import java.io.File
 
 public abstract class CompileResourcesTask : Exec() {
@@ -35,13 +34,24 @@ public abstract class CompileResourcesTask : Exec() {
     @get:OutputFile
     public abstract val outputFile: RegularFileProperty
 
-    override fun exec() {
-        val android = project.extensions.getByName<BaseExtension>("android")
+    private val aaptExecutable: File
+    private val frameworkJar: File
 
-        val aaptExecutable = android.sdkDirectory.resolve("build-tools")
+    init {
+        val android = project.extensions.getAndroid()
+
+        aaptExecutable = android.sdkDirectory
+            .resolve("build-tools")
             .resolve(android.buildToolsVersion)
             .resolve(if (OperatingSystem.current().isWindows) "aapt2.exe" else "aapt2")
 
+        frameworkJar = android.sdkDirectory
+            .resolve("platforms")
+            .resolve(android.compileSdkVersion!!)
+            .resolve("android.jar")
+    }
+
+    override fun exec() {
         val tmpRes = File.createTempFile("res", ".zip")
 
         execActionFactory.newExecAction().apply {
@@ -55,16 +65,10 @@ public abstract class CompileResourcesTask : Exec() {
         execActionFactory.newExecAction().apply {
             executable = aaptExecutable.path
             args("link")
-            args(
-                "-I",
-                android.sdkDirectory
-                    .resolve("platforms")
-                    .resolve(android.compileSdkVersion!!)
-                    .resolve("android.jar")
-            )
+            args("-I", frameworkJar.path)
             args("-R", tmpRes.path)
-            args("--manifest", manifestFile.asFile.get().path)
-            args("-o", outputFile.asFile.get().path)
+            args("--manifest", manifestFile.get().asFile.path)
+            args("-o", outputFile.get().asFile.path)
             args("--auto-add-overlay")
             execute()
         }

@@ -1,23 +1,20 @@
 package com.aliucord.gradle.plugins
 
-import com.aliucord.gradle.Constants
-import com.aliucord.gradle.getDiscord
+import com.aliucord.gradle.*
 import com.aliucord.gradle.task.*
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.getByName
 
 public abstract class AliucordBaseGradle : Plugin<Project> {
     public fun registerDecompileTask(project: Project): TaskProvider<GenSourcesTask> {
         return project.tasks.register("decompileDiscord", GenSourcesTask::class.java) {
             group = Constants.TASK_GROUP
-            inputApk.set(project.configurations
-                .getDiscord().elements
-                .map { it.single() as RegularFile })
+
+            val discordConfiguration = project.configurations.getDiscord()
+            val discordJar = discordConfiguration.elements.map { it.single().asFile }
+            inputApk.set(project.layout.file(discordJar))
         }
     }
 
@@ -41,7 +38,7 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
         val intermediates = project.layout.buildDirectory.dir("intermediates")
 
         return project.tasks.register("compileResources", CompileResourcesTask::class.java) {
-            val android = project.extensions.getByName<BaseExtension>("android")
+            val android = project.extensions.getAndroid()
             val processManifestTask = project.tasks.named("processDebugManifest", ProcessLibraryManifest::class.java)
 
             group = Constants.TASK_GROUP_INTERNAL

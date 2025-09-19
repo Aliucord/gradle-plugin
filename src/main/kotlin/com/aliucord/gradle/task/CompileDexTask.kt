@@ -15,7 +15,7 @@
 
 package com.aliucord.gradle.task
 
-import com.android.build.gradle.BaseExtension
+import com.aliucord.gradle.getAndroid
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
 import com.android.builder.dexing.*
@@ -24,7 +24,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.getByName
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
@@ -40,14 +39,20 @@ public abstract class CompileDexTask : DefaultTask() {
     @get:OutputDirectory
     public abstract val outputDir: DirectoryProperty
 
-    @TaskAction
-    public fun compileDex() {
-        val android = project.extensions.getByName<BaseExtension>("android")
-        val minSdkVersion = requireNotNull(android.defaultConfig.minSdkVersion?.apiLevel) {
+    private val minSdkVersion: Int
+    private val bootClasspath: List<Path>
+
+    init {
+        val android = project.extensions.getAndroid()
+        minSdkVersion = requireNotNull(android.defaultConfig.minSdkVersion?.apiLevel) {
             "minSdkVersion is required to compile to dex!"
         }
+        bootClasspath = android.bootClasspath.map(File::toPath)
+    }
 
-        val bootClasspath = ClassFileProviderFactory(android.bootClasspath.map(File::toPath))
+    @TaskAction
+    public fun compileDex() {
+        val bootClasspath = ClassFileProviderFactory(bootClasspath)
         val classpath = ClassFileProviderFactory(listOf<Path>())
 
         val dexBuilder = DexArchiveBuilder.createD8DexBuilder(
@@ -68,7 +73,7 @@ public abstract class CompileDexTask : DefaultTask() {
         )
 
         try {
-            outputDir.asFile.get().mkdirs()
+            outputDir.get().asFile.mkdirs()
 
             dexBuilder.convert(
                 input = input.files
@@ -83,7 +88,7 @@ public abstract class CompileDexTask : DefaultTask() {
                     }
                     // ... flatten class files from all inputs
                     .stream().flatMap { it },
-                dexOutput = outputDir.asFile.get().toPath(),
+                dexOutput = outputDir.get().asFile.toPath(),
                 globalSyntheticsOutput = null,
             )
         } finally {

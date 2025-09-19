@@ -48,6 +48,6 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
             )
         }
 
-        outputFile.asFile.get().writeText(Json.encodeToString(map))
+        outputFile.get().asFile.writeText(Json.encodeToString(map))
     }
 }

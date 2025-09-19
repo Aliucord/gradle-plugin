@@ -24,7 +24,7 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         val compileDexTask = registerCompileDexTask(project)
 
         // Bundling
-        val makeTask = project.tasks.register("make", Copy::class.java) {
+        project.tasks.register("make", Copy::class.java) {
             group = Constants.TASK_GROUP
             from(compileDexTask.map { it.outputs.files.singleFile })
             into(project.layout.buildDirectory)
@@ -34,7 +34,8 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         // Deployment
         project.tasks.register("deployWithAdb", DeployWithAdbTask::class.java) {
             group = Constants.TASK_GROUP
-            dependsOn(makeTask)
+            deployType = "injector"
+            deployFile.fileProvider(compileDexTask.map { it.outputDir.asFileTree.singleFile })
         }
     }
 }

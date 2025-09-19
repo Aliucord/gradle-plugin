@@ -5,6 +5,7 @@ import com.aliucord.gradle.registerDiscordConfiguration
 import com.aliucord.gradle.task.DeployWithAdbTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.api.tasks.bundling.ZipEntryCompression
 
 /**
  * The Gradle plugin used to build Aliucord's core subproject.
@@ -27,13 +28,24 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         // Bundling
         val makeTask = project.tasks.register("make", Zip::class.java) {
             group = Constants.TASK_GROUP
+            entryCompression = ZipEntryCompression.STORED
             isPreserveFileTimestamps = false
             archiveBaseName.set(project.name)
             archiveVersion.set("")
             destinationDirectory.set(project.layout.buildDirectory)
 
+            val resourcesFile = compileResourcesTask.flatMap { it.outputFile }
+            val resourcesFileTree = project.zipTree(resourcesFile)
+            val resources = resourcesFile.map {
+                if (it.asFile.exists()) {
+                    resourcesFileTree
+                } else {
+                    emptyList()
+                }
+            }
+
             from(compileDexTask.map { it.outputs.files.singleFile })
-            from(project.zipTree(compileResourcesTask.flatMap { it.outputFile })) {
+            from(resources) {
                 exclude("AndroidManifest.xml")
             }
 
@@ -45,7 +57,8 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         // Deployment
         project.tasks.register("deployWithAdb", DeployWithAdbTask::class.java) {
             group = Constants.TASK_GROUP
-            dependsOn(makeTask)
+            deployType = "core"
+            deployFile.fileProvider(makeTask.map { it.outputs.files.single() })
         }
     }
 }
