@@ -71,8 +71,9 @@ public abstract class CompileDexTask : DefaultTask() {
             outputDir.asFile.get().mkdirs()
 
             dexBuilder.convert(
-                input = input.asFileTree
+                input = input.files
                     // For each input path...
+                    .filter(File::exists)
                     .map { path ->
                         ClassFileInputs
                             // ... scan for class files

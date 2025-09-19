@@ -22,9 +22,17 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("aliucord") {
-            id = "com.aliucord.gradle"
-            implementationClass = "com.aliucord.gradle.AliucordPlugin"
+        create("aliucord-plugin") {
+            id = "com.aliucord.plugin"
+            implementationClass = "com.aliucord.gradle.plugins.AliucordPluginGradle"
+        }
+        create("aliucord-core") {
+            id = "com.aliucord.core"
+            implementationClass = "com.aliucord.gradle.plugins.AliucordCoreGradle"
+        }
+        create("aliucord-injector") {
+            id = "com.aliucord.injector"
+            implementationClass = "com.aliucord.gradle.plugins.AliucordInjectorGradle"
         }
     }
 }

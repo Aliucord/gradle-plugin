@@ -20,6 +20,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import org.gradle.internal.os.OperatingSystem
+import org.gradle.kotlin.dsl.getByName
 import java.io.File
 
 public abstract class CompileResourcesTask : Exec() {
@@ -35,7 +36,7 @@ public abstract class CompileResourcesTask : Exec() {
     public abstract val outputFile: RegularFileProperty
 
     override fun exec() {
-        val android = project.extensions.getByName("android") as BaseExtension
+        val android = project.extensions.getByName<BaseExtension>("android")
 
         val aaptExecutable = android.sdkDirectory.resolve("build-tools")
             .resolve(android.buildToolsVersion)

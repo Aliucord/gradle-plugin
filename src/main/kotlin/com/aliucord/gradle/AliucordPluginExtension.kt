@@ -20,10 +20,10 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import javax.inject.Inject
 
 /**
  * Gets the registered Aliucord extension from this project.
+ * This is only available when applying the `com.aliucord.plugin` Gradle plugin, for use in Aliucord plugins.
  * ```kt
  * project.extensions.getAliucord()
  * ```
@@ -33,6 +33,7 @@ public fun ExtensionContainer.getAliucord(): AliucordExtension =
 
 /**
  * Attempts to get a registered Aliucord extension from this project.
+ * This is only available when applying the `com.aliucord.plugin` Gradle plugin, for use in Aliucord plugins.
  * ```kt
  * project.extensions.findAliucord()
  * ```
@@ -43,13 +44,7 @@ public fun ExtensionContainer.findAliucord(): AliucordExtension? =
 /**
  * The interface through which Aliucord plugins are configured through.
  */
-public abstract class AliucordExtension @Inject constructor(private val project: Project) {
-    /**
-     * The build method to use for this project.
-     * This should never be changed from [ProjectType.PLUGIN] for plugins.
-     */
-    public val projectType: Property<ProjectType> = project.objects.property(ProjectType::class.java)
-
+public abstract class AliucordExtension(private val project: Project) {
     /**
      * Whether to build and include this project with the other plugins for updating.
      * After publishing, this plugin will by default appear on plugin repositories unless [deployHidden] is set.
