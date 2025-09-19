@@ -75,7 +75,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             isPreserveFileTimestamps = false
             archiveBaseName.set(project.name)
             archiveVersion.set("")
-            destinationDirectory.set(project.layout.buildDirectory)
+            destinationDirectory.set(project.layout.buildDirectory.dir("outputs"))
 
             val manifestFile = intermediates.map { it.file("manifest.json") }
             val pluginClassNameFile = extractPluginClassTask.flatMap { it.pluginClass }

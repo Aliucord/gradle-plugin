@@ -27,7 +27,7 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         project.tasks.register("make", Copy::class.java) {
             group = Constants.TASK_GROUP
             from(compileDexTask.map { it.outputs.files.singleFile })
-            into(project.layout.buildDirectory)
+            into(project.layout.buildDirectory.dir("outputs"))
             rename { "Injector.dex" }
         }
 

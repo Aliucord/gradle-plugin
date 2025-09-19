@@ -32,7 +32,7 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
             isPreserveFileTimestamps = false
             archiveBaseName.set(project.name)
             archiveVersion.set("")
-            destinationDirectory.set(project.layout.buildDirectory)
+            destinationDirectory.set(project.layout.buildDirectory.dir("outputs"))
 
             val resourcesFile = compileResourcesTask.flatMap { it.outputFile }
             val resourcesFileTree = project.zipTree(resourcesFile)
