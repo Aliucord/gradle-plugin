@@ -1,7 +1,6 @@
 package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.Constants
-import com.aliucord.gradle.registerDiscordConfiguration
 import com.aliucord.gradle.task.DeployWithAdbTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
@@ -13,14 +12,12 @@ import org.gradle.api.tasks.bundling.ZipEntryCompression
  */
 @Suppress("unused")
 public abstract class AliucordCoreGradle : AliucordBaseGradle() {
-    override fun apply(project: Project) {
-        registerTasks(project)
-        registerDiscordConfiguration(project)
+    override fun apply(target: Project) {
+        registerTasks(target)
+        registerDex2jarTransformer(target)
     }
 
     protected fun registerTasks(project: Project) {
-        registerDecompileTask(project)
-
         // Compilation
         val compileDexTask = registerCompileDexTask(project)
         val compileResourcesTask = registerCompileResourcesTask(project)

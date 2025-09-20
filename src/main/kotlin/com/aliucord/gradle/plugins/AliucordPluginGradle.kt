@@ -6,7 +6,6 @@ import com.aliucord.gradle.models.PluginManifest
 import com.aliucord.gradle.task.*
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
 
@@ -16,13 +15,13 @@ import org.gradle.api.tasks.bundling.ZipEntryCompression
  */
 @Suppress("unused")
 public abstract class AliucordPluginGradle : AliucordBaseGradle() {
-    override fun apply(project: Project) {
-        if (project == project.rootProject) {
-            registerRootTasks(project)
+    override fun apply(target: Project) {
+        if (target == target.rootProject) {
+            registerRootTasks(target)
         } else {
-            project.extensions.create("aliucord", AliucordExtension::class.java, project)
-            registerTasks(project)
-            registerDiscordConfiguration(project)
+            target.extensions.create("aliucord", AliucordExtension::class.java, target)
+            registerTasks(target)
+            registerDex2jarTransformer(target)
         }
     }
 
@@ -56,8 +55,6 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
     protected fun registerTasks(project: Project) {
         val extension = project.extensions.getAliucord()
         val intermediates = project.layout.buildDirectory.dir("intermediates")
-
-        registerDecompileTask(project)
 
         // Compilation
         val compileDexTask = registerCompileDexTask(project)

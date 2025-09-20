@@ -1,30 +1,29 @@
 package com.aliucord.gradle.plugins
 
-import com.aliucord.gradle.*
+import com.aliucord.gradle.Constants
+import com.aliucord.gradle.getAndroid
 import com.aliucord.gradle.task.*
+import com.aliucord.gradle.transformers.Dex2JarTransform
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.dependencies
 
 public abstract class AliucordBaseGradle : Plugin<Project> {
-    public fun registerDecompileTask(project: Project): TaskProvider<GenSourcesTask> {
-        return project.tasks.register("decompileDiscord", GenSourcesTask::class.java) {
-            group = Constants.TASK_GROUP
-
-            val discordConfiguration = project.configurations.getDiscord()
-            val discordVersion = discordConfiguration.dependencies.single().version
-
-            // This is ugly, but since resolving Discord as a dependency is a hacky workaround,
-            // this is the only way I can figure out how that contains the chaos.
-            val discordCache = project.gradle.gradleUserHomeDir.resolve("caches/aliucord/discord")
-            inputApk.set(discordCache.resolve("discord-$discordVersion.apk"))
-            outputJar.set(discordCache.resolve("discord-$discordVersion-sources.jar"))
+    protected fun registerDex2jarTransformer(project: Project) {
+        // Register a transform to convert "apk" artifact types to "jar"
+        project.dependencies {
+            registerTransform(Dex2JarTransform::class.java) {
+                from.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "apk")
+                to.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "jar")
+            }
         }
     }
 
     @Suppress("UnstableApiUsage")
-    public fun registerCompileDexTask(project: Project): TaskProvider<CompileDexTask> {
+    protected fun registerCompileDexTask(project: Project): TaskProvider<CompileDexTask> {
         val intermediates = project.layout.buildDirectory.dir("intermediates")
 
         // Since the `implementation` is non-resolvable, wrap it in another configuration
@@ -64,7 +63,7 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
         return compileDexTask
     }
 
-    public fun registerCompileResourcesTask(project: Project): TaskProvider<CompileResourcesTask> {
+    protected fun registerCompileResourcesTask(project: Project): TaskProvider<CompileResourcesTask> {
         val intermediates = project.layout.buildDirectory.dir("intermediates")
 
         return project.tasks.register("compileResources", CompileResourcesTask::class.java) {
