@@ -23,6 +23,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             registerTasks(target)
             registerDex2jarTransformer(target)
         }
+        deleteLegacyCache(target)
     }
 
     protected fun registerRootTasks(rootProject: Project) {

@@ -15,6 +15,7 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
     override fun apply(target: Project) {
         registerTasks(target)
         registerDex2jarTransformer(target)
+        deleteLegacyCache(target)
     }
 
     protected fun registerTasks(project: Project) {

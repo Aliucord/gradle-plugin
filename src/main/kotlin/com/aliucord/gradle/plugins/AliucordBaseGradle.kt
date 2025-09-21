@@ -11,8 +11,27 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.dependencies
+import java.util.concurrent.atomic.AtomicBoolean
 
 public abstract class AliucordBaseGradle : Plugin<Project> {
+    private companion object {
+        var legacyCacheDeleted = AtomicBoolean(false)
+    }
+
+    /**
+     * Deletes the old Discord cache that lived under
+     * `~/.gradle/caches/aliucord/discord/discord-{version}.{apk,jar}`
+     * which was used by this Gradle plugin prior to v2. These files are not
+     * tracked by Gradle's cache garbage collector so we have to handle it manually.
+     */
+    protected fun deleteLegacyCache(project: Project) {
+        if (legacyCacheDeleted.getAndSet(true)) return
+
+        project.gradle.gradleUserHomeDir
+            .resolve("caches/aliucord")
+            .deleteRecursively()
+    }
+
     protected fun registerDex2jarTransformer(project: Project) {
         // Register a transform to convert "apk" artifact types to "jar"
         project.dependencies {
@@ -63,7 +82,9 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
 
         return project.tasks.register("compileResources", CompileResourcesTask::class.java) {
             val android = project.extensions.getAndroid()
-            val processManifestTask = project.tasks.named("processDebugManifest", ProcessLibraryManifest::class.java)
+            val processManifestTask = project.tasks.named(
+                "processDebugManifest",
+                ProcessLibraryManifest::class.java)
 
             group = Constants.TASK_GROUP_INTERNAL
             dependsOn(processManifestTask)
