@@ -2,7 +2,8 @@ package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.Constants
 import com.aliucord.gradle.getAndroid
-import com.aliucord.gradle.task.*
+import com.aliucord.gradle.task.CompileDexTask
+import com.aliucord.gradle.task.CompileResourcesTask
 import com.aliucord.gradle.transformers.Dex2JarTransform
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import org.gradle.api.Plugin
@@ -34,26 +35,20 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
             extendsFrom(project.configurations.getByName("implementation"))
         }
 
-        val flattenDependenciesTask = project.tasks.register(
-            "flattenAarDependencies",
-            FlattenAarDependencies::class.java,
-        ) {
-            group = Constants.TASK_GROUP_INTERNAL
-            outputDir.set(intermediates.map { it.dir("dex_dependencies") })
-            dependencies.from(implementationArtifacts.map { configuration ->
-                configuration.incoming.files
-                    .filter { it.extension == "aar" }
-            })
-        }
-
         val compileDexTask = project.tasks.register("compileDex", CompileDexTask::class.java) {
             group = Constants.TASK_GROUP_INTERNAL
             outputDir.set(intermediates.map { it.dir("dex") })
 
-            input.from(flattenDependenciesTask)
+            // Collect all dependencies as jars
+            // `.aar` will have artifact transformers applied to extract their inner `classes.jar`
             input.from(implementationArtifacts.map { configuration ->
-                configuration.incoming.files
-                    .filter { it.extension == "jar" }
+                configuration.incoming
+                    .artifactView {
+                        attributes.attribute(
+                            ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE,
+                            ArtifactTypeDefinition.JAR_TYPE)
+                    }
+                    .files
             })
 
             for (task in arrayOf("compileDebugJavaWithJavac", "compileDebugKotlin"))
