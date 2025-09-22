@@ -32,14 +32,19 @@ internal data class Links(
 
 @Serializable
 internal data class PluginManifest(
-    val pluginClassName: String,
     val name: String,
     val version: String,
     val description: String?,
     val authors: List<Author>,
     val links: Links,
-
-    val updateUrl: String?,
     val changelog: String?,
     val changelogMedia: String?,
+
+    val pluginClassName: String,
+
+    var minimumDiscordVersion: Int? = null,
+    var minimumAliucordVersion: String? = null,
+    var minimumKotlinVersion: String? = null,
+    var minimumApiLevel: Int? = null,
+    val updateUrl: String?,
 )

@@ -49,13 +49,16 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
             val pluginChecksum = CRC32().apply { update(pluginFile.readBytes()) }.value.toUInt()
 
             map[plugin.name.get()] = UpdateInfo(
-                minimumDiscordVersion = plugin.minimumDiscordVersion.get(),
+                hidden = plugin.deployHidden.orNull,
                 version = plugin.version.get(),
-                build = plugin.buildUrl.orNull,
+                buildUrl = plugin.buildUrl.orNull,
+                buildCrc32 = pluginChecksum.toHexString(HexFormat.UpperCase),
                 changelog = plugin.changelog.orNull,
                 changelogMedia = plugin.changelogMedia.orNull,
-                hidden = plugin.deployHidden.orNull,
-                crc32 = pluginChecksum.toHexString(HexFormat.UpperCase),
+                minimumDiscordVersion = plugin.minimumDiscordVersion.get(),
+                minimumAliucordVersion = plugin.minimumAliucordVersion.get(),
+                minimumKotlinVersion = plugin.kotlinVersion.get(),
+                minimumApiLevel = plugin.minimumApiLevel.get(),
             )
         }
 
@@ -73,6 +76,9 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
         @get:Input @get:Optional public abstract val changelogMedia: Property<String>
         @get:Input @get:Optional public abstract val buildUrl: Property<String>
         @get:Input @get:Optional public abstract val minimumDiscordVersion: Property<Int>
+        @get:Input @get:Optional public abstract val minimumAliucordVersion: Property<String>
+        @get:Input @get:Optional public abstract val minimumApiLevel: Property<Int>
+        @get:Input @get:Optional public abstract val kotlinVersion: Property<String>
         @get:InputFile @get:Optional public abstract val buildFile: RegularFileProperty
     } // @formatter:on
 }

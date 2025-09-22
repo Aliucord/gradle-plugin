@@ -15,15 +15,20 @@
 
 package com.aliucord.gradle.models
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class UpdateInfo(
-    var minimumDiscordVersion: Int? = null,
+    var hidden: Boolean? = false,
     var version: String? = null,
-    var build: String? = null,
+    @SerialName("build")
+    var buildUrl: String? = null,
+    var buildCrc32: String? = null,
     var changelog: String? = null,
     var changelogMedia: String? = null,
-    var hidden: Boolean? = false,
-    var crc32: String? = null,
+    var minimumDiscordVersion: Int? = null,
+    var minimumAliucordVersion: String? = null,
+    var minimumKotlinVersion: String? = null,
+    var minimumApiLevel: Int? = null,
 )

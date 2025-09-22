@@ -31,17 +31,33 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             val plugins = rootProject.allprojects
                 .filter { it.extensions.findAliucord() != null }
                 .map { project ->
+                    val aliucord = project.extensions.getAliucord()
+                    val android = project.extensions.getAndroid()
+                    val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
+
+                    // Retrieve various dependency versions that this plugin is built with
+                    val discordDependency = compileOnlyConfiguration.dependencies
+                        .find { it.group == "com.discord" && it.name == "discord" }
+                    val kotlinDependency = compileOnlyConfiguration.dependencies
+                        .find { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
+                    val aliucordDependency = compileOnlyConfiguration.dependencies
+                        .find { it.group == "com.aliucord" && it.name == "Aliucord" }
+
                     project.objects.newInstance(GenerateUpdaterJsonTask.PluginInfo::class.java).apply {
                         name.set(project.provider { project.name })
                         version.set(project.provider { project.version.toString() })
-
-                        val aliucord = project.extensions.getAliucord()
                         deploy.set(aliucord.deploy)
                         deployHidden.set(aliucord.deployHidden)
                         changelog.set(aliucord.changelog)
                         changelogMedia.set(aliucord.changelogMedia)
                         buildUrl.set(aliucord.buildUrl)
-                        minimumDiscordVersion.set(aliucord.minimumDiscordVersion)
+                        minimumDiscordVersion.set(aliucord.minimumDiscordVersion
+                            // TODO: this may fail when the version is a wildcard
+                            .orElse(project.provider { discordDependency?.version?.toInt() }))
+                        minimumAliucordVersion.set(aliucordDependency?.version)
+                        // If this is null, an earlier task will fail
+                        minimumApiLevel.set(android.defaultConfig.minSdkVersion?.apiLevel)
+                        kotlinVersion.set(kotlinDependency?.version)
                         buildFile.fileProvider(project.tasks.named("make")
                             .map { it.outputs.files.singleFile })
                     }
@@ -97,6 +113,21 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             }
             dependsOn(pluginClassNameFile)
 
+            val aliucord = project.extensions.getAliucord()
+            val android = project.extensions.getAndroid()
+            val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
+
+            // Retrieve various dependency versions that this plugin is built with
+            val discordDependency = compileOnlyConfiguration.dependencies
+                .find { it.group == "com.discord" && it.name == "discord" }
+            val kotlinDependency = compileOnlyConfiguration.dependencies
+                .find { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
+            val aliucordDependency = compileOnlyConfiguration.dependencies
+                .find { it.group == "com.aliucord" && it.name == "Aliucord" }
+            val minimumDiscordVersion = aliucord.minimumDiscordVersion
+                // TODO: this may fail when the version is a wildcard
+                .orElse(project.provider { discordDependency?.version?.toInt() })
+
             // Write manifest to be zipped
             val manifest = PluginManifest(
                 pluginClassName = "PLACEHOLDER",
@@ -111,10 +142,14 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                 updateUrl = extension.updateUrl.orNull,
                 changelog = extension.changelog.orNull,
                 changelogMedia = extension.changelogMedia.orNull,
+                minimumAliucordVersion = aliucordDependency?.version,
+                minimumKotlinVersion = kotlinDependency?.version,
+                minimumApiLevel = android.defaultConfig.minSdkVersion?.apiLevel,
             )
             doFirst {
                 val newManifest = manifest.copy(
                     pluginClassName = pluginClassNameFile.get().asFile.readText(),
+                    minimumDiscordVersion = minimumDiscordVersion.get(),
                 )
                 manifestFile.get().asFile.writeText(Json.encodeToString(newManifest))
             }
