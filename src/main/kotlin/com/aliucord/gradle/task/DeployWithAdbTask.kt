@@ -27,6 +27,20 @@ import se.vidstige.jadb.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 
+/**
+ * Pushes a single build output for either Aliucord Core, Aliucord Injector, or Aliucord plugins to a device
+ * that has Aliucord and Aliucord Manager installed.
+ *
+ * - When pushing plugins, the plugin is pushed to `/storage/emulated/0/Aliucord/plugins`, corresponding to the
+ * first Android user's external storage. The plugin is then forcefully enabled by changing Aliucord's settings.
+ * Aliucord is then forcefully (re)started on the device.
+ * - When pushing Aliucord Core, the bundle is pushed to `/storage/emulated/0/Aliucord/Aliucord.zip`, similarly to
+ * when pushing plugins. Aliucord's settings are then changed to enable using the local core bundle, and Aliucord
+ * is then (re)started.
+ * - When pushing Aliucord Injector, the dex is pushed to `/data/local/tmp/aliucord`, and an intent is launched to
+ * invoke Aliucord Manager to import the component to its internal storage. Aliucord Manager then prompts to start
+ * a new installation.
+ */
 @DisableCachingByDefault
 public abstract class DeployWithAdbTask : DefaultTask() {
     @get:Input
