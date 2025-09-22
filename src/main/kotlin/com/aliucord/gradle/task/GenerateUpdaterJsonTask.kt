@@ -61,7 +61,7 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
                 changelogMedia = plugin.changelogMedia.orNull,
                 minimumDiscordVersion = plugin.minimumDiscordVersion.get(),
                 minimumAliucordVersion = plugin.minimumAliucordVersion.get(),
-                minimumKotlinVersion = plugin.kotlinVersion.get(),
+                minimumKotlinVersion = plugin.minimumKotlinVersion.get(),
                 minimumApiLevel = plugin.minimumApiLevel.get(),
             )
         }
@@ -81,8 +81,8 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
         @get:Input @get:Optional public abstract val buildUrl: Property<String>
         @get:Input @get:Optional public abstract val minimumDiscordVersion: Property<Int>
         @get:Input @get:Optional public abstract val minimumAliucordVersion: Property<String>
+        @get:Input @get:Optional public abstract val minimumKotlinVersion: Property<String>
         @get:Input @get:Optional public abstract val minimumApiLevel: Property<Int>
-        @get:Input @get:Optional public abstract val kotlinVersion: Property<String>
         @get:InputFile @get:Optional public abstract val buildFile: RegularFileProperty
     } // @formatter:on
 }

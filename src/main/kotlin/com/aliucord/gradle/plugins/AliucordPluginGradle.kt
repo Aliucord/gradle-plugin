@@ -71,7 +71,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                         minimumAliucordVersion.set(aliucordDependency?.version)
                         // If this is null, an earlier task will fail
                         minimumApiLevel.set(android.defaultConfig.minSdkVersion?.apiLevel)
-                        kotlinVersion.set(kotlinDependency?.version)
+                        minimumKotlinVersion.set(kotlinDependency?.version)
                         buildFile.fileProvider(project.tasks.named("make")
                             .map { it.outputs.files.singleFile })
                     }
@@ -97,7 +97,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             dependsOn(compileDexTask)
 
             this.inputs.setFrom(compileDexTask.map { it.outputs.files.singleFile })
-            this.pluginClass.set(intermediates.map { it.file("pluginClass.txt") })
+            this.pluginClassNameFile.set(intermediates.map { it.file("pluginClass.txt") })
         }
 
         val makeTask = project.tasks.register("make", Zip::class.java) {
@@ -109,7 +109,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             destinationDirectory.set(project.layout.buildDirectory.dir("outputs"))
 
             val manifestFile = intermediates.map { it.file("manifest.json") }
-            val pluginClassNameFile = extractPluginClassTask.flatMap { it.pluginClass }
+            val pluginClassNameFile = extractPluginClassTask.flatMap { it.pluginClassNameFile }
             val resourcesFile = compileResourcesTask.flatMap { it.outputFile }
             val resourcesFileTree = project.zipTree(resourcesFile)
             val resources = resourcesFile.map {

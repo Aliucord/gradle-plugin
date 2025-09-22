@@ -33,7 +33,7 @@ public abstract class ExtractPluginClassTask : DefaultTask() {
     public val inputs: ConfigurableFileCollection = project.objects.fileCollection()
 
     @get:OutputFile
-    public abstract val pluginClass: RegularFileProperty
+    public abstract val pluginClassNameFile: RegularFileProperty
 
     @TaskAction
     public fun extract() {
@@ -59,31 +59,44 @@ public abstract class ExtractPluginClassTask : DefaultTask() {
 
         require(pluginClasses.isNotEmpty()) {
             "No classes were found annotated with @AliucordPlugin! " +
-                "An Aliucord plugin should have exactly one entrypoint class annotated with @AliucordPlugin"
+                "An Aliucord plugin should have exactly one entrypoint class annotated with @AliucordPlugin."
         }
         require(pluginClasses.size == 1) {
             """
                 More than one class was found annotated with @AliucordPlugin!
                 An Aliucord plugin should have exactly one entrypoint class annotated with @AliucordPlugin.
-                Found classes:
 
-                ${pluginClasses.joinToString(separator = "\n") { it.className }}
+                Found classes: ${pluginClasses.joinToString(separator = " ") { it.className }}
             """.trimIndent()
         }
+        val pluginClass = pluginClasses.single()
 
-        val hasManifestOverride = pluginClasses.single()
-            .methods
-            .any {
-                it.method.name == "getManifest" &&
-                    it.method.desc == $$"()Lcom/aliucord/entities/Plugin$Manifest;"
-            }
-        require(!hasManifestOverride) { "Plugins cannot override getManifest()!" }
+        // Ensure that the class extends `Plugin`
+        require(pluginClass.superClass == PLUGIN_CLASS) {
+            "Plugins must extend Aliucord's Plugin class! " +
+                "Class ${pluginClass.className} was found to be overriding ${pluginClass.superClass}"
+        }
 
-        val pluginClassName = pluginClasses.single()
-            .className
+        // Ensure that the class does not override getManifest()
+        val hasManifestOverride = pluginClass.methods.any {
+            it.method.name == "getManifest" && it.method.desc == "()${MANIFEST_CLASS}"
+        }
+        require(!hasManifestOverride) {
+            "Plugins cannot override getManifest()! " +
+                "Class ${pluginClass.className} was found to be overriding getManifest()!"
+        }
+
+        // Convert from a dex type signature to JVM classname
+        val pluginClassName = pluginClass.className
             .removeSurrounding("L", ";")
             .replace('/', '.')
 
-        this.pluginClass.get().asFile.writeText(pluginClassName)
+        this.pluginClassNameFile.get().asFile
+            .writeText(pluginClassName)
+    }
+
+    private companion object {
+        const val PLUGIN_CLASS = "Lcom/aliucord/entities/Plugin;"
+        const val MANIFEST_CLASS = "Lcom/aliucord/entities/Plugin\$Manifest"
     }
 }
