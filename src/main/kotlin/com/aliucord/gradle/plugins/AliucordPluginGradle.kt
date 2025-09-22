@@ -1,7 +1,6 @@
 package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.*
-import com.aliucord.gradle.models.Links
 import com.aliucord.gradle.models.PluginManifest
 import com.aliucord.gradle.task.*
 import kotlinx.serialization.json.Json
@@ -63,8 +62,8 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                     }
                 }
 
-            group = Constants.TASK_GROUP_INTERNAL
-            outputFile.set(rootProject.layout.buildDirectory.file("updater.json"))
+            group = Constants.TASK_GROUP
+            outputFile.set(rootProject.layout.buildDirectory.file("outputs/updater.json"))
             pluginConfigs.set(plugins)
         }
     }
@@ -135,7 +134,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                 version = project.version.toString(),
                 description = project.description,
                 authors = extension.authors.get(),
-                links = Links(
+                links = PluginManifest.Links(
                     github = extension.githubUrl.orNull,
                     source = extension.sourceUrl.orNull,
                 ),

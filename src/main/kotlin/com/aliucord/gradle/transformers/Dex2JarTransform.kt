@@ -7,7 +7,7 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 
 /**
- * Artifact transformer to convert "apk" artifact types into "jar" types using `dex2jar`.
+ * Artifact transformer to convert `apk` artifact types into `jar` types using Dex2Jar.
  */
 public abstract class Dex2JarTransform : TransformAction<TransformParameters.None> {
     @get:InputArtifact

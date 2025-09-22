@@ -22,6 +22,9 @@ import org.gradle.api.tasks.*
 import org.gradle.internal.os.OperatingSystem
 import java.io.File
 
+/**
+ * Compiles an Android project's resources using aapt, and outputs an apk containing no code.
+ */
 public abstract class CompileResourcesTask : Exec() {
     @get:InputDirectory
     @get:SkipWhenEmpty

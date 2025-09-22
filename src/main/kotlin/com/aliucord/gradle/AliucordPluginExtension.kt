@@ -15,7 +15,7 @@
 
 package com.aliucord.gradle
 
-import com.aliucord.gradle.models.Author
+import com.aliucord.gradle.models.PluginManifest
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.provider.ListProperty
@@ -65,7 +65,7 @@ public abstract class AliucordExtension(private val project: Project) {
 
     /**
      * Specifies the minimum Discord version required to load this plugin.
-     * If this is not explicitly set, then it is populated by the version of Discord specified in dependencies.
+     * If this is not explicitly set, then it is assumed from the project's single Discord dependency.
      */
     public val minimumDiscordVersion: Property<Int> = project.objects.property(Int::class.java)
 
@@ -104,7 +104,7 @@ public abstract class AliucordExtension(private val project: Project) {
      *                  Set this to false if you don't want to be spammed for support.
      */
     public fun author(name: String, id: Long = 0L, hyperlink: Boolean = true) {
-        authors.add(Author(name, id, hyperlink))
+        authors.add(PluginManifest.Author(name, id, hyperlink))
     }
 
     /**
@@ -168,6 +168,6 @@ public abstract class AliucordExtension(private val project: Project) {
      */
     public val updateUrl: Property<String> = project.objects.property(String::class.java)
 
-    internal val authors: ListProperty<Author> = project.objects
-        .listProperty(Author::class.java)
+    internal val authors: ListProperty<PluginManifest.Author> = project.objects
+        .listProperty(PluginManifest.Author::class.java)
 }

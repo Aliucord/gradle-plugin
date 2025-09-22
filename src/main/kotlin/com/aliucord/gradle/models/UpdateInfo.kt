@@ -18,6 +18,10 @@ package com.aliucord.gradle.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * A single item of the updater manifest that is consumed by Aliucord to determine whether
+ * a compatible update for a plugin exists to be installed.
+ */
 @Serializable
 internal data class UpdateInfo(
     var hidden: Boolean? = false,

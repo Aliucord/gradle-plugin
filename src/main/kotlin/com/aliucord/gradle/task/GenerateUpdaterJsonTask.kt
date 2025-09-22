@@ -24,6 +24,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.util.zip.CRC32
 
+/**
+ * Generates the `updater.json` containing metadata about the most recent build of all plugins.
+ * This is used by Aliucord to determine whether there is a compatible plugin update to install.
+ */
 public abstract class GenerateUpdaterJsonTask : DefaultTask() {
     @get:OutputFile
     public abstract val outputFile: RegularFileProperty

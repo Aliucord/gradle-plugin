@@ -17,19 +17,11 @@ package com.aliucord.gradle.models
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-internal data class Author(
-    val name: String,
-    val id: Long,
-    val hyperlink: Boolean,
-)
-
-@Serializable
-internal data class Links(
-    var github: String? = null,
-    var source: String? = null,
-)
-
+/**
+ * The manifest embedded into a plugin zip containing info about the plugin,
+ * as well as the dependencies that were used to build it. These are used
+ * to determine whether the plugin may be safely loaded by Aliucord.
+ */
 @Serializable
 internal data class PluginManifest(
     val name: String,
@@ -47,4 +39,17 @@ internal data class PluginManifest(
     var minimumKotlinVersion: String? = null,
     var minimumApiLevel: Int? = null,
     val updateUrl: String?,
-)
+) {
+    @Serializable
+    internal data class Author(
+        val name: String,
+        val id: Long,
+        val hyperlink: Boolean,
+    )
+
+    @Serializable
+    internal data class Links(
+        var github: String? = null,
+        var source: String? = null,
+    )
+}

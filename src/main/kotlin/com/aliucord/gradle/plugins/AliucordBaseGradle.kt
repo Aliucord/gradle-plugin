@@ -13,6 +13,10 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.dependencies
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * A base class for [AliucordCoreGradle], [AliucordInjectorGradle], and [AliucordPluginGradle]
+ * containing shared project registration code.
+ */
 public abstract class AliucordBaseGradle : Plugin<Project> {
     private companion object {
         var legacyCacheDeleted = AtomicBoolean(false)

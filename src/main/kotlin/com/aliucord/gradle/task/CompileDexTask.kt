@@ -29,6 +29,10 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 
+/**
+ * Converts compiled class files from jars to a single dex file. [input] may contain compiled jars, class files,
+ * and compiled dependencies as well to be bundled into the dex.
+ */
 public abstract class CompileDexTask : DefaultTask() {
     @get:InputFiles
     @get:SkipWhenEmpty

@@ -138,7 +138,6 @@ public abstract class DeployWithAdbTask : DefaultTask() {
             "-n", "com.aliucord.manager/.MainActivity",
             "-a", "com.aliucord.manager.IMPORT_COMPONENT",
             "--es", "aliucord.file", componentPath,
-            // TODO: change customComponentType to componentType in Manager
             "--es", "aliucord.componentType", componentType,
         )
 
