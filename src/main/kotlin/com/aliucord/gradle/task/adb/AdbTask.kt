@@ -17,8 +17,8 @@ package com.aliucord.gradle.task.adb
 
 import com.aliucord.gradle.getAndroid
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
@@ -31,8 +31,9 @@ import java.util.concurrent.TimeUnit
 public abstract class AdbTask : DefaultTask() {
     @get:Input
     @set:Option(option = "wait-for-debugger", description = "Enables debugging flag when starting the discord activity")
-    public abstract var waitForDebugger: Provider<Boolean>
+    public var waitForDebugger: Boolean = false
 
+    @Optional
     @get:Input
     @set:Option(
         option = "device-serial",
@@ -40,7 +41,7 @@ public abstract class AdbTask : DefaultTask() {
             "Set this to 'all' to deploy to all connected devices. " +
             "If not set, then this defaults to any *single* connected device."
     )
-    public abstract var deviceSerial: Provider<String>
+    public var deviceSerial: String? = null
 
     private val adbExecutable: File = project.extensions.getAndroid().adbExecutable
 
@@ -48,7 +49,7 @@ public abstract class AdbTask : DefaultTask() {
      * Runs a command inside an adb shell on all devices specified by [deviceSerial].
      */
     protected fun runAdbShell(vararg args: String) {
-        val serialConfig = deviceSerial.orNull
+        val serialConfig = deviceSerial
         val allSerials = getAllSerials()
         val serials = when (serialConfig) {
             null -> {
@@ -116,7 +117,7 @@ public abstract class AdbTask : DefaultTask() {
 
             if (adbProcess.exitValue() != 0) {
                 throw AdbException("adb exited with a non-zero exit code. " +
-                    "Command: ${args.joinToString(" ")} " +
+                    "Command: adb ${args.joinToString(" ")} " +
                     "Error: " + adbProcess.errorReader().readText())
             } else {
                 return adbProcess.inputReader().readText()

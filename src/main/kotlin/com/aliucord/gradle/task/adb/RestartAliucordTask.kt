@@ -32,9 +32,9 @@ public abstract class RestartAliucordTask : AdbTask() {
         val args = arrayListOf(
             "start",
             "-S", // Force restart app
-            "-n", "com.aliucord/com.discord.app.AppActivity\$Main",
+            "-n", $$"'com.aliucord/com.discord.app.AppActivity$Main'",
         )
-        if (this.waitForDebugger.get())
+        if (this.waitForDebugger)
             args += "-D"
 
         this.runAdbShell("am", *args.toTypedArray())

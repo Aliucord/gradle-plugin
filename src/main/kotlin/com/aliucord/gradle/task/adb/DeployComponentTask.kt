@@ -43,14 +43,14 @@ public abstract class DeployComponentTask : AdbTask() {
             "am", "start",
             "-n", "com.aliucord.manager/.MainActivity",
             "-a", "com.aliucord.manager.IMPORT_COMPONENT",
-            "--es", "aliucord.file", remoteComponentPath,
-            "--es", "aliucord.componentType", componentType,
+            "--es", "aliucord.file", "'$remoteComponentPath'",
+            "--es", "aliucord.componentType", "'$componentType'",
         )
-        runAdbCommand("push", componentFile.absolutePath, remoteComponentPath)
+        runAdbCommand("push", "\"${componentFile.absolutePath}\"", "\"$remoteComponentPath\"")
 
         // Wait a bit to let Aliucord Manager import the component
         Thread.sleep(2000)
 
-        runAdbShell("rm", "-rf", remoteComponentPath)
+        runAdbShell("rm", "-rf", "'$remoteComponentPath'")
     }
 }

@@ -58,8 +58,8 @@ public abstract class DeployPrebuiltTask : AdbTask() {
     private fun deployCore(file: File) {
         runAdbCommand(
             "push",
-            file.absolutePath,
-            "$REMOTE_ALIUCORD_DIR/Aliucord.zip"
+            "\"${file.absolutePath}\"",
+            "\"$REMOTE_ALIUCORD_DIR/Aliucord.zip\"",
         )
         editAliucordSettings {
             set("AC_from_storage", true)
@@ -71,8 +71,8 @@ public abstract class DeployPrebuiltTask : AdbTask() {
     private fun deployPlugin(file: File) {
         runAdbCommand(
             "push",
-            file.absolutePath,
-            "$REMOTE_ALIUCORD_DIR/plugins/${file.name}"
+            "\"${file.absolutePath}\"",
+            "\"$REMOTE_ALIUCORD_DIR/plugins/${file.name}\"",
         )
         editAliucordSettings {
             set("AC_PM_${file.nameWithoutExtension}", true)
@@ -89,9 +89,9 @@ public abstract class DeployPrebuiltTask : AdbTask() {
             "mkdir",
             "-v", // Verbose
             "-p", // Create all parents
-            "$REMOTE_ALIUCORD_DIR/plugins",
-            "$REMOTE_ALIUCORD_DIR/themes",
-            "$REMOTE_ALIUCORD_DIR/settings",
+            "'$REMOTE_ALIUCORD_DIR/plugins'",
+            "'$REMOTE_ALIUCORD_DIR/themes'",
+            "'$REMOTE_ALIUCORD_DIR/settings'",
         )
     }
 
@@ -105,7 +105,11 @@ public abstract class DeployPrebuiltTask : AdbTask() {
         val settings = ByteArrayOutputStream()
 
         try {
-            runAdbCommand("pull", remoteSettingsPath, localSettingsFile.absolutePath)
+            runAdbCommand(
+                "pull",
+                "\"${remoteSettingsPath}\"",
+                "\"${localSettingsFile.absolutePath}\"",
+            )
         } catch (e: AdbException) {
             if (e.message?.contains("No such file or directory") == true) {
                 settings.reset()
@@ -123,6 +127,10 @@ public abstract class DeployPrebuiltTask : AdbTask() {
         val outJson = Json.encodeToString(modifiedJson)
 
         localSettingsFile.writeText(outJson)
-        runAdbCommand("push", localSettingsFile.absolutePath, remoteSettingsPath)
+        runAdbCommand(
+            "push",
+            "\"${localSettingsFile.absolutePath}\"",
+            "\"${remoteSettingsPath}\"",
+        )
     }
 }
