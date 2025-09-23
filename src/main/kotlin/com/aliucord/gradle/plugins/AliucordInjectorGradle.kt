@@ -16,7 +16,7 @@
 package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.Constants
-import com.aliucord.gradle.task.DeployWithAdbTask
+import com.aliucord.gradle.task.adb.DeployComponentTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 
@@ -45,10 +45,10 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         }
 
         // Deployment
-        project.tasks.register("deployWithAdb", DeployWithAdbTask::class.java) {
+        project.tasks.register("deployWithAdb", DeployComponentTask::class.java) {
             group = Constants.TASK_GROUP
-            deployType = "injector"
-            deployFile.fileProvider(compileDexTask.map { it.outputDir.asFileTree.singleFile })
+            componentType = "injector"
+            componentFile.fileProvider(compileDexTask.map { it.outputDir.asFileTree.singleFile })
         }
     }
 }

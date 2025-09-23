@@ -16,7 +16,8 @@
 package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.Constants
-import com.aliucord.gradle.task.DeployWithAdbTask
+import com.aliucord.gradle.task.adb.DeployPrebuiltTask
+import com.aliucord.gradle.task.adb.RestartAliucordTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
@@ -68,10 +69,15 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         }
 
         // Deployment
-        project.tasks.register("deployWithAdb", DeployWithAdbTask::class.java) {
+        val restartAliucordTask = project.tasks.register("restartAliucord", RestartAliucordTask::class.java) {
             group = Constants.TASK_GROUP
-            deployType = "core"
+        }
+
+        project.tasks.register("deployWithAdb", DeployPrebuiltTask::class.java) {
+            group = Constants.TASK_GROUP
+            deployType = DeployPrebuiltTask.DeployType.Core
             deployFile.fileProvider(makeTask.map { it.outputs.files.single() })
+            finalizedBy(restartAliucordTask)
         }
     }
 }

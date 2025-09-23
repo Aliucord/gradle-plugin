@@ -17,7 +17,10 @@ package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.*
 import com.aliucord.gradle.models.PluginManifest
-import com.aliucord.gradle.task.*
+import com.aliucord.gradle.task.ExtractPluginClassTask
+import com.aliucord.gradle.task.GenerateUpdaterJsonTask
+import com.aliucord.gradle.task.adb.DeployPrebuiltTask
+import com.aliucord.gradle.task.adb.RestartAliucordTask
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
@@ -33,7 +36,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         if (target == target.rootProject) {
             registerRootTasks(target)
         } else {
-            target.extensions.create("aliucord", AliucordExtension::class.java, target)
+            target.extensions.create("aliucord", AliucordExtension::class.java)
             registerTasks(target)
             registerDex2jarTransformer(target)
         }
@@ -174,10 +177,15 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         }
 
         // Deployment
-        project.tasks.register("deployWithAdb", DeployWithAdbTask::class.java) {
+        val restartAliucordTask = project.tasks.register("restartAliucord", RestartAliucordTask::class.java) {
             group = Constants.TASK_GROUP
-            deployType = "plugin"
+        }
+
+        project.tasks.register("deployWithAdb", DeployPrebuiltTask::class.java) {
+            group = Constants.TASK_GROUP
+            deployType = DeployPrebuiltTask.DeployType.Plugin
             deployFile.fileProvider(makeTask.map { it.outputs.files.single() })
+            finalizedBy(restartAliucordTask)
         }
     }
 }
