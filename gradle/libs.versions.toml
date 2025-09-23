@@ -1,16 +1,18 @@
 [versions]
-agp = "8.13.0"
+android-gradle = "8.13.0"
+android-tools = "31.13.0"
 dex2jar = "2.4.0"
 jadb = "1.2.1"
 jadx = "1.4.5"
 kotlin = "2.2.0"
 kotlinx-serialization = "1.9.0"
 publish = "0.34.0"
-sdk = "31.13.0"
 
 [libraries]
-android-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
-android-sdk = { module = "com.android.tools:sdk-common", version.ref = "sdk" }
+android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
+android-repository = { module = "com.android.tools:repository", version.ref = "android-tools" }
+android-sdk = { module = "com.android.tools:sdk-common", version.ref = "android-tools" }
+android-sdklib = { module = "com.android.tools:sdklib", version.ref = "android-tools" }
 dex2jar = { module = "com.aliucord.d2j:dex-translator", version.ref = "dex2jar" }
 jadx-core = { module = "com.aliucord.jadx:jadx-core", version.ref = "jadx" }
 jadx-dexInput = { module = "com.aliucord.jadx:jadx-dex-input", version.ref = "jadx" }

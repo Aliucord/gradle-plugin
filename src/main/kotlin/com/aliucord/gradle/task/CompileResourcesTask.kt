@@ -16,10 +16,13 @@
 package com.aliucord.gradle.task
 
 import com.aliucord.gradle.getAndroid
+import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.sdklib.BuildToolInfo
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
-import org.gradle.internal.os.OperatingSystem
 import java.io.File
 
 /**
@@ -37,28 +40,31 @@ public abstract class CompileResourcesTask : Exec() {
     @get:OutputFile
     public abstract val outputFile: RegularFileProperty
 
-    private val aaptExecutable: File
-    private val frameworkJar: File
+    private val androidJar: Provider<File>
+    private val aaptExecutable: Provider<File>
 
     init {
         val android = project.extensions.getAndroid()
+        val sdkService = getBuildService<SdkComponentsBuildService, SdkComponentsBuildService.Parameters>(
+            buildServiceRegistry = project.gradle.sharedServices)
+        val sdkLoader = sdkService.map {
+            it.sdkLoader(
+                compileSdkVersion = project.provider { android.compileSdkVersion },
+                buildToolsRevision = project.provider { android.buildToolsRevision },
+            )
+        }
 
-        aaptExecutable = android.sdkDirectory
-            .resolve("build-tools")
-            .resolve(android.buildToolsVersion)
-            .resolve(if (OperatingSystem.current().isWindows) "aapt2.exe" else "aapt2")
-
-        frameworkJar = android.sdkDirectory
-            .resolve("platforms")
-            .resolve(android.compileSdkVersion!!)
-            .resolve("android.jar")
+        usesService(sdkService)
+        androidJar = sdkLoader.flatMap { it.androidJarProvider }
+        aaptExecutable = sdkLoader.flatMap { it.buildToolInfoProvider }
+            .map { File(it.getPath(BuildToolInfo.PathId.AAPT2)) }
     }
 
     override fun exec() {
         val tmpRes = File.createTempFile("res", ".zip")
 
         execActionFactory.newExecAction().apply {
-            executable = aaptExecutable.path
+            executable = aaptExecutable.get().path
             args("compile")
             args("--dir", input.asFile.get().path)
             args("-o", tmpRes.path)
@@ -66,9 +72,9 @@ public abstract class CompileResourcesTask : Exec() {
         }
 
         execActionFactory.newExecAction().apply {
-            executable = aaptExecutable.path
+            executable = aaptExecutable.get().path
             args("link")
-            args("-I", frameworkJar.path)
+            args("-I", androidJar.get().path)
             args("-R", tmpRes.path)
             args("--manifest", manifestFile.get().asFile.path)
             args("-o", outputFile.get().asFile.path)

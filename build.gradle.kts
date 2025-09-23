@@ -13,12 +13,14 @@ kotlin {
 
 dependencies {
     compileOnly(libs.android.gradle)
+    compileOnly(libs.android.repository)
     compileOnly(libs.android.sdk)
+    compileOnly(libs.android.sdklib)
 
     implementation(libs.dex2jar)
+    implementation(libs.jadb)
     implementation(libs.jadx.core)
     implementation(libs.jadx.dexInput)
-    implementation(libs.jadb)
     implementation(libs.kotlinx.serialization)
 }
 
