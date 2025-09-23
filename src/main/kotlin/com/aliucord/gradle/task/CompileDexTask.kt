@@ -57,10 +57,11 @@ public abstract class CompileDexTask : DefaultTask() {
     public fun compileDex() {
         val illegalDependencies = arrayOf("kotlin-stdlib", "material", "constraintlayout", "appcompat")
         val illegalDependency = input.asFileTree.find { f -> illegalDependencies.any { f.name.startsWith(it) } }
-        if (illegalDependency != null)
+        if (illegalDependency != null) {
             throw GradleException("${illegalDependency.name} is defined as an 'implementation' dependency! " +
                 "It should be explicitly defined as a 'compileOnly' dependency! " +
                 "Please read the Aliucord Gradle plugin v2 migration guide!")
+        }
 
         val bootClasspath = ClassFileProviderFactory(bootClasspath)
         val classpath = ClassFileProviderFactory(listOf<Path>())

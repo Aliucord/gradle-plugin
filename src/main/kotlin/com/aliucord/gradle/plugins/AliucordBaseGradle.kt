@@ -25,7 +25,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -54,7 +54,7 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
     protected fun registerDex2jarTransformer(project: Project) {
         // Register a transform to convert "apk" artifact types to "jar"
         project.dependencies {
-            registerTransform(Dex2JarTransform::class.java) {
+            registerTransform(Dex2JarTransform::class) {
                 from.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "apk")
                 to.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "jar")
             }
@@ -73,7 +73,7 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
             extendsFrom(project.configurations.getByName("implementation"))
         }
 
-        val compileDexTask = project.tasks.register("compileDex", CompileDexTask::class.java) {
+        val compileDexTask = project.tasks.register<CompileDexTask>("compileDex") {
             group = Constants.TASK_GROUP_INTERNAL
             outputDir.set(intermediates.map { it.dir("dex") })
 
@@ -99,15 +99,11 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
     protected fun registerCompileResourcesTask(project: Project): TaskProvider<CompileResourcesTask> {
         val intermediates = project.layout.buildDirectory.dir("intermediates")
 
-        return project.tasks.register("compileResources", CompileResourcesTask::class.java) {
+        return project.tasks.register<CompileResourcesTask>("compileResources") {
             val android = project.extensions.getAndroid()
-            val processManifestTask = project.tasks.named(
-                "processDebugManifest",
-                ProcessLibraryManifest::class.java)
+            val processManifestTask = project.tasks.named<ProcessLibraryManifest>("processDebugManifest")
 
             group = Constants.TASK_GROUP_INTERNAL
-            dependsOn(processManifestTask)
-
             input.set(android.sourceSets.getByName("main").res.srcDirs.single())
             manifestFile.set(processManifestTask.flatMap { it.manifestOutputFile })
             outputFile.set(intermediates.map { it.file("res.apk") })

@@ -30,7 +30,10 @@ import java.util.concurrent.TimeUnit
 @DisableCachingByDefault
 public abstract class AdbTask : DefaultTask() {
     @get:Input
-    @set:Option(option = "wait-for-debugger", description = "Enables debugging flag when starting the discord activity")
+    @set:Option(
+        option = "wait-for-debugger",
+        description = "Enables debugging flag when starting the discord activity",
+    )
     public var waitForDebugger: Boolean = false
 
     @Optional
@@ -39,7 +42,7 @@ public abstract class AdbTask : DefaultTask() {
         option = "device-serial",
         description = "The serial number of the device to deploy to, or a list of comma-separated serials. " +
             "Set this to 'all' to deploy to all connected devices. " +
-            "If not set, then this defaults to any *single* connected device."
+            "If not set, then this defaults to any *single* connected device.",
     )
     public var deviceSerial: String? = null
 

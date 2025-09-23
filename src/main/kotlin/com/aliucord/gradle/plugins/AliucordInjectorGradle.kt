@@ -19,6 +19,7 @@ import com.aliucord.gradle.Constants
 import com.aliucord.gradle.task.adb.DeployComponentTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
+import org.gradle.kotlin.dsl.register
 
 /**
  * The Gradle plugin used to configure Aliucord's Injector subproject.
@@ -37,7 +38,7 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         val compileDexTask = registerCompileDexTask(project)
 
         // Bundling
-        project.tasks.register("make", Copy::class.java) {
+        project.tasks.register<Copy>("make") {
             group = Constants.TASK_GROUP
             from(compileDexTask.map { it.outputs.files.singleFile })
             into(project.layout.buildDirectory.dir("outputs"))
@@ -45,7 +46,7 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         }
 
         // Deployment
-        project.tasks.register("deployWithAdb", DeployComponentTask::class.java) {
+        project.tasks.register<DeployComponentTask>("deployWithAdb") {
             group = Constants.TASK_GROUP
             componentType = "injector"
             componentFile.fileProvider(compileDexTask.map { it.outputs.files.asFileTree.singleFile })

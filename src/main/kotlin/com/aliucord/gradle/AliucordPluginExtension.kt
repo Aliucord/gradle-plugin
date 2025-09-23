@@ -20,6 +20,8 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.kotlin.dsl.listProperty
+import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -51,7 +53,7 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      * After publishing, this plugin will by default appear on plugin repositories unless [deployHidden] is set.
      */
     public val deploy: Property<Boolean> = project.objects
-        .property(Boolean::class.java)
+        .property<Boolean>()
         .convention(true)
 
     /**
@@ -61,14 +63,14 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      * - Deploying an EOL update to a plugin to self-delete itself.
      */
     public val deployHidden: Property<Boolean> = project.objects
-        .property(Boolean::class.java)
+        .property<Boolean>()
         .convention(false)
 
     /**
      * Specifies the minimum Discord version required to load this plugin.
      * If this is not explicitly set, then it is assumed from the project's single Discord dependency.
      */
-    public val minimumDiscordVersion: Property<Int> = project.objects.property(Int::class.java)
+    public val minimumDiscordVersion: Property<Int> = project.objects.property<Int>()
 
     /**
      * The plugin's full changelog, including all previous versions. Markdown is allowed.
@@ -88,12 +90,12 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      * )
      * ```
      */
-    public val changelog: Property<String> = project.objects.property(String::class.java)
+    public val changelog: Property<String> = project.objects.property<String>()
 
     /**
      * A url to a video or image to be shown on the plugin's changelog page.
      */
-    public val changelogMedia: Property<String> = project.objects.property(String::class.java)
+    public val changelogMedia: Property<String> = project.objects.property<String>()
 
     /**
      * Specify an author of this plugin.
@@ -136,7 +138,7 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      *
      * This property is populated through [github] by default.
      */
-    public val githubUrl: Property<String> = project.objects.property(String::class.java)
+    public val githubUrl: Property<String> = project.objects.property<String>()
 
     /**
      * Specifies a source code url, such as a link to a subdirectory in a GitHub repository containing
@@ -145,7 +147,7 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      *
      * This property is optional and not populated by anything by default.
      */
-    public val sourceUrl: Property<String> = project.objects.property(String::class.java)
+    public val sourceUrl: Property<String> = project.objects.property<String>()
 
     /**
      * Specifies the URL at which this plugin zip is going to be available for download.
@@ -158,7 +160,7 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      *
      * Note that the 2nd one is the legacy format, which includes `%s` to be replaced with the plugin's name at runtime.
      */
-    public val buildUrl: Property<String> = project.objects.property(String::class.java)
+    public val buildUrl: Property<String> = project.objects.property<String>()
 
     /**
      * Specifies the URL at which the updater metadata is available. This must be hosted on GitHub.
@@ -167,8 +169,7 @@ public abstract class AliucordExtension @Inject constructor(private val project:
      * If explicitly setting this field, it must be a url in the format of:
      * `https://raw.githubusercontent.com/${USERNAME}/${REPOSITORY}/refs/heads/builds/updater.json`
      */
-    public val updateUrl: Property<String> = project.objects.property(String::class.java)
+    public val updateUrl: Property<String> = project.objects.property<String>()
 
-    internal val authors: ListProperty<PluginManifest.Author> = project.objects
-        .listProperty(PluginManifest.Author::class.java)
+    internal val authors: ListProperty<PluginManifest.Author> = project.objects.listProperty<PluginManifest.Author>()
 }

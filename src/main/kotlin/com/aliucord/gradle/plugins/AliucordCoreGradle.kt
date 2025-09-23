@@ -21,6 +21,7 @@ import com.aliucord.gradle.task.adb.RestartAliucordTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
+import org.gradle.kotlin.dsl.register
 
 /**
  * The Gradle plugin used to build Aliucord's core subproject.
@@ -40,7 +41,7 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         val compileResourcesTask = registerCompileResourcesTask(project)
 
         // Bundling
-        val makeTask = project.tasks.register("make", Zip::class.java) {
+        val makeTask = project.tasks.register<Zip>("make") {
             group = Constants.TASK_GROUP
             entryCompression = ZipEntryCompression.STORED
             isPreserveFileTimestamps = false
@@ -69,11 +70,11 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         }
 
         // Deployment
-        val restartAliucordTask = project.tasks.register("restartAliucord", RestartAliucordTask::class.java) {
+        val restartAliucordTask = project.tasks.register<RestartAliucordTask>("restartAliucord") {
             group = Constants.TASK_GROUP
         }
 
-        project.tasks.register("deployWithAdb", DeployPrebuiltTask::class.java) {
+        project.tasks.register<DeployPrebuiltTask>("deployWithAdb") {
             group = Constants.TASK_GROUP
             deployType = DeployPrebuiltTask.DeployType.Core
             deployFile.fileProvider(makeTask.map { it.outputs.files.single() })

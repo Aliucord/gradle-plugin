@@ -25,6 +25,7 @@ import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
+import org.gradle.kotlin.dsl.*
 
 /**
  * The Gradle plugin used to build Aliucord plugins.
@@ -36,7 +37,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         if (target == target.rootProject) {
             registerRootTasks(target)
         } else {
-            target.extensions.create("aliucord", AliucordExtension::class.java)
+            target.extensions.create<AliucordExtension>("aliucord")
             registerTasks(target)
             registerDex2jarTransformer(target)
         }
@@ -44,7 +45,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
     }
 
     protected fun registerRootTasks(rootProject: Project) {
-        rootProject.tasks.register("generateUpdaterJson", GenerateUpdaterJsonTask::class.java) {
+        rootProject.tasks.register<GenerateUpdaterJsonTask>("generateUpdaterJson") {
             val plugins = rootProject.allprojects
                 .filter { it.extensions.findAliucord() != null }
                 .map { project ->
@@ -60,7 +61,7 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                     val aliucordDependency = compileOnlyConfiguration.dependencies
                         .find { it.group == "com.aliucord" && it.name == "Aliucord" }
 
-                    project.objects.newInstance(GenerateUpdaterJsonTask.PluginInfo::class.java).apply {
+                    project.objects.newInstance<GenerateUpdaterJsonTask.PluginInfo>().apply {
                         name.set(project.provider { project.name })
                         version.set(project.provider { project.version.toString() })
                         deploy.set(aliucord.deploy)
@@ -95,15 +96,14 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         val compileResourcesTask = registerCompileResourcesTask(project)
 
         // Bundling
-        val extractPluginClassTask = project.tasks.register("extractPluginClass", ExtractPluginClassTask::class.java) {
+        val extractPluginClassTask = project.tasks.register<ExtractPluginClassTask>("extractPluginClass") {
             group = Constants.TASK_GROUP_INTERNAL
-            dependsOn(compileDexTask)
 
             this.inputs.setFrom(compileDexTask.map { it.outputs.files.singleFile })
             this.pluginClassNameFile.set(intermediates.map { it.file("pluginClass.txt") })
         }
 
-        val makeTask = project.tasks.register("make", Zip::class.java) {
+        val makeTask = project.tasks.register<Zip>("make") {
             group = Constants.TASK_GROUP
             entryCompression = ZipEntryCompression.STORED
             isPreserveFileTimestamps = false
@@ -177,11 +177,11 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         }
 
         // Deployment
-        val restartAliucordTask = project.tasks.register("restartAliucord", RestartAliucordTask::class.java) {
+        val restartAliucordTask = project.tasks.register<RestartAliucordTask>("restartAliucord") {
             group = Constants.TASK_GROUP
         }
 
-        project.tasks.register("deployWithAdb", DeployPrebuiltTask::class.java) {
+        project.tasks.register<DeployPrebuiltTask>("deployWithAdb") {
             group = Constants.TASK_GROUP
             deployType = DeployPrebuiltTask.DeployType.Plugin
             deployFile.fileProvider(makeTask.map { it.outputs.files.single() })
