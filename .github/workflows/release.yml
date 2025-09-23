@@ -24,7 +24,7 @@ jobs:
           MAVEN_RELEASE_PASSWORD: ${{ secrets.MAVEN_RELEASE_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          ./gradlew :publish --stacktrace
+          ./gradlew :publish :publishToMavenLocal --stacktrace
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
