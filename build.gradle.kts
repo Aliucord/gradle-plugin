@@ -18,7 +18,6 @@ dependencies {
     compileOnly(libs.android.sdklib)
 
     implementation(libs.dex2jar)
-    implementation(libs.jadb)
     implementation(libs.jadx.core)
     implementation(libs.jadx.dexInput)
     implementation(libs.kotlinx.serialization)

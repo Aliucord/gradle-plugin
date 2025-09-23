@@ -15,12 +15,14 @@
 
 package com.aliucord.gradle.task.adb
 
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.*
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private const val REMOTE_ALIUCORD_DIR = "/storage/emulated/0/Aliucord"
 
@@ -62,7 +64,10 @@ public abstract class DeployPrebuiltTask : AdbTask() {
             "\"$REMOTE_ALIUCORD_DIR/Aliucord.zip\"",
         )
         editAliucordSettings {
-            set("AC_from_storage", true)
+            set(
+                JsonPrimitive("AC_from_storage"),
+                JsonPrimitive(true),
+            )
         }
 
         logger.lifecycle("Deployed Aliucord core to configured devices")
@@ -75,7 +80,10 @@ public abstract class DeployPrebuiltTask : AdbTask() {
             "\"$REMOTE_ALIUCORD_DIR/plugins/${file.name}\"",
         )
         editAliucordSettings {
-            set("AC_PM_${file.nameWithoutExtension}", true)
+            set(
+                JsonPrimitive("AC_PM_${file.nameWithoutExtension}"),
+                JsonPrimitive(true),
+            )
         }
 
         logger.lifecycle("Deployed plugin ${file.nameWithoutExtension} to configured devices")
@@ -99,38 +107,49 @@ public abstract class DeployPrebuiltTask : AdbTask() {
      * Reads Aliucord core's settings from the device, then applies [block] to it,
      * and writes it back to the device.
      */
-    protected fun editAliucordSettings(block: (MutableMap<Any?, Any?>).() -> Unit) {
+    @OptIn(ExperimentalSerializationApi::class)
+    protected fun editAliucordSettings(block: (MutableMap<JsonPrimitive, JsonElement>).() -> Unit) {
         val localSettingsFile = temporaryDir.resolve("settings.json")
         val remoteSettingsPath = "$REMOTE_ALIUCORD_DIR/settings/Aliucord.json"
-        val settings = ByteArrayOutputStream()
 
-        try {
-            runAdbCommand(
-                "pull",
-                "\"${remoteSettingsPath}\"",
-                "\"${localSettingsFile.absolutePath}\"",
-            )
-        } catch (e: AdbException) {
-            if (e.message?.contains("No such file or directory") == true) {
-                settings.reset()
-            } else {
-                throw e
+        aliucordSettingsLock.withLock {
+            try {
+                runAdbCommand(
+                    "pull",
+                    "\"${remoteSettingsPath}\"",
+                    "\"${localSettingsFile.absolutePath}\"",
+                )
+            } catch (e: AdbException) {
+                logger.info("Failed to pull Aliucord settings", e)
             }
-        }
 
-        val json = if (settings.size() == 0) {
-            mutableMapOf()
-        } else {
-            Json.decodeFromString<Map<Any, Any>>(settings.toString(Charsets.UTF_8))
-        }
-        val modifiedJson = block(json.toMutableMap())
-        val outJson = Json.encodeToString(modifiedJson)
+            val settings = try {
+                Json.decodeFromStream<MutableMap<JsonPrimitive, JsonElement>>(
+                    stream = localSettingsFile.inputStream())
+            } catch (e: Exception) {
+                logger.info("Failed to parse Aliucord settings", e)
+                mutableMapOf()
+            }
 
-        localSettingsFile.writeText(outJson)
-        runAdbCommand(
-            "push",
-            "\"${localSettingsFile.absolutePath}\"",
-            "\"${remoteSettingsPath}\"",
-        )
+            // Apply modifier block
+            block(settings)
+
+            @Suppress("JSON_FORMAT_REDUNDANT")
+            val newSettings = Json { prettyPrint = true }.encodeToString(settings)
+
+            localSettingsFile.writeText(newSettings)
+            runAdbCommand(
+                "push",
+                "\"${localSettingsFile.absolutePath}\"",
+                "\"${remoteSettingsPath}\"",
+            )
+        }
+    }
+
+    private companion object {
+        /**
+         * Lock access to the device's `Aliucord.json` settings file to prevent race conditions.
+         */
+        val aliucordSettingsLock = ReentrantLock(/* fair = */ false)
     }
 }

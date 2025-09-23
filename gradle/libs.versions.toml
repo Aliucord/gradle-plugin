@@ -2,7 +2,6 @@
 android-gradle = "8.13.0"
 android-tools = "31.13.0"
 dex2jar = "2.4.0"
-jadb = "1.2.1"
 jadx = "1.4.5"
 kotlin = "2.2.0"
 kotlinx-serialization = "1.9.0"
@@ -16,7 +15,6 @@ android-sdklib = { module = "com.android.tools:sdklib", version.ref = "android-t
 dex2jar = { module = "com.aliucord.d2j:dex-translator", version.ref = "dex2jar" }
 jadx-core = { module = "com.aliucord.jadx:jadx-core", version.ref = "jadx" }
 jadx-dexInput = { module = "com.aliucord.jadx:jadx-dex-input", version.ref = "jadx" }
-jadb = { module = "com.aliucord:jadb", version.ref = "jadb" }
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]
