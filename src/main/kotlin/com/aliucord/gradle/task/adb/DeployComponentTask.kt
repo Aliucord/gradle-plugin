@@ -34,19 +34,23 @@ public abstract class DeployComponentTask : AdbTask() {
     @get:InputFile
     public abstract val componentFile: RegularFileProperty
 
+    @get:Input
+    public abstract var componentVersion: String
+
     @TaskAction
     public fun deploy() {
         val componentFile = componentFile.get().asFile
-        val remoteComponentPath = "/data/local/tmp/${componentFile.name}"
+        val remoteComponentName = "$componentVersion.dex"
+        val remoteComponentPath = "/data/local/tmp/$remoteComponentName"
 
+        runAdbCommand("push", "\"${componentFile.absolutePath}\"", "\"$remoteComponentPath\"")
         runAdbShell(
             "am", "start",
             "-n", "com.aliucord.manager/.MainActivity",
             "-a", "com.aliucord.manager.IMPORT_COMPONENT",
-            "--es", "aliucord.file", "'$remoteComponentPath'",
+            "--es", "aliucord.file", "'$remoteComponentName'",
             "--es", "aliucord.componentType", "'$componentType'",
         )
-        runAdbCommand("push", "\"${componentFile.absolutePath}\"", "\"$remoteComponentPath\"")
 
         // Wait a bit to let Aliucord Manager import the component
         Thread.sleep(2000)
