@@ -17,11 +17,12 @@ package com.aliucord.gradle.task.adb
 
 import com.aliucord.gradle.getAndroid
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -46,7 +47,9 @@ public abstract class AdbTask : DefaultTask() {
     )
     public var deviceSerial: String? = null
 
-    private val adbExecutable: File = project.extensions.getAndroid().adbExecutable
+    @get:InputFile
+    public val adbExecutable: RegularFileProperty = project.objects.fileProperty()
+        .fileProvider(project.provider { project.extensions.getAndroid().adbExecutable })
 
     /**
      * Runs a command inside an adb shell on all devices specified by [deviceSerial].
@@ -113,7 +116,7 @@ public abstract class AdbTask : DefaultTask() {
     }
 
     protected fun runAdbCommand(vararg args: String): String {
-        val adbProcess = ProcessBuilder(adbExecutable.absolutePath, *args).start()
+        val adbProcess = ProcessBuilder(adbExecutable.get().asFile.absolutePath, *args).start()
 
         try {
             adbProcess.waitFor(60, TimeUnit.SECONDS)
