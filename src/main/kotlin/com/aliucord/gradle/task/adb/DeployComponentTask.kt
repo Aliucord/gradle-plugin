@@ -40,7 +40,8 @@ public abstract class DeployComponentTask : AdbTask() {
     @TaskAction
     public fun deploy() {
         val componentFile = componentFile.get().asFile
-        val remoteComponentName = "$componentVersion.dex"
+        val timestamp = System.currentTimeMillis()
+        val remoteComponentName = "${timestamp}_${componentVersion}.${componentFile.extension}"
         val remoteComponentPath = "/data/local/tmp/$remoteComponentName"
 
         runAdbCommand("push", "\"${componentFile.absolutePath}\"", "\"$remoteComponentPath\"")
