@@ -41,7 +41,7 @@ gradlePlugin {
 }
 
 mavenPublishing {
-    coordinates("com.aliucord", "gradle", "2.1.0")
+    coordinates("com.aliucord", "gradle", "2.1.1")
     configureBasedOnAppliedPlugins()
 }
 
