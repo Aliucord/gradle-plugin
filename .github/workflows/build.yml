@@ -21,7 +21,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          cache-read-only: ${{ github.event_name != 'pull_request' }}
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Build & Publish Snapshot
         shell: bash
@@ -30,8 +30,7 @@ jobs:
           MAVEN_SNAPSHOTS_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          ./gradlew --stacktrace :publishToMavenLocal :publishAllPublicationsToAliucordSnapshotsRepository
-          ./gradlew --stacktrace :publishAllPublicationsToAliucordSnapshotsRepository -PVERSION_NAME=${GITHUB_SHA::7}
+          ./gradlew --stacktrace :publishToMavenLocal :publishAllPublicationsToAliucordSnapshotsRepository -PVERSION_NAME=${GITHUB_SHA::7}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
