@@ -18,6 +18,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+
       - name: Build & Publish
         env:
           MAVEN_RELEASES_USERNAME: ${{ secrets.MAVEN_RELEASE_USERNAME }}
