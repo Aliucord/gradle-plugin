@@ -40,8 +40,10 @@ gradlePlugin {
     }
 }
 
+version = "2.1.1"
+
 mavenPublishing {
-    coordinates("com.aliucord", "gradle", "2.1.1")
+    coordinates("com.aliucord", "gradle")
     configureBasedOnAppliedPlugins()
 }
 
@@ -51,8 +53,16 @@ publishing {
             name = "aliucord"
             url = uri("https://maven.aliucord.com/releases")
             credentials {
-                username = System.getenv("MAVEN_RELEASE_USERNAME")
-                password = System.getenv("MAVEN_RELEASE_PASSWORD")
+                username = System.getenv("MAVEN_RELEASES_USERNAME")
+                password = System.getenv("MAVEN_RELEASES_PASSWORD")
+            }
+        }
+        maven {
+            name = "aliucordSnapshots"
+            url = uri("https://maven.aliucord.com/snapshots")
+            credentials {
+                username = System.getenv("MAVEN_SNAPSHOTS_USERNAME")
+                password = System.getenv("MAVEN_SNAPSHOTS_PASSWORD")
             }
         }
     }
