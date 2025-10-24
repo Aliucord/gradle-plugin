@@ -20,7 +20,6 @@ import com.aliucord.gradle.getAndroid
 import com.aliucord.gradle.task.CompileDexTask
 import com.aliucord.gradle.task.CompileResourcesTask
 import com.aliucord.gradle.transformers.Dex2JarTransform
-import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import org.gradle.api.*
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
@@ -91,13 +90,11 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
 
 
             input.from(project.tasks.named("compileDebugJavaWithJavac"))
-            afterEvaluate {
-                input.from(try {
-                    project.tasks.named("compileDebugKotlin")
-                } catch (_: UnknownDomainObjectException) {
-                    null
-                })
-            }
+            input.from(try {
+                project.tasks.named("compileDebugKotlin")
+            } catch (_: UnknownDomainObjectException) {
+                null
+            })
         }
 
         return compileDexTask
