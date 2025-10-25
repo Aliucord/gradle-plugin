@@ -60,7 +60,7 @@ public abstract class GenerateUpdaterJsonTask : DefaultTask() {
                 changelog = plugin.changelog.orNull,
                 changelogMedia = plugin.changelogMedia.orNull,
                 minimumDiscordVersion = plugin.minimumDiscordVersion.get(),
-                minimumAliucordVersion = plugin.minimumAliucordVersion.get(),
+                minimumAliucordVersion = plugin.minimumAliucordVersion.orNull,
                 minimumKotlinVersion = plugin.minimumKotlinVersion.orNull,
                 minimumApiLevel = plugin.minimumApiLevel.get(),
             )

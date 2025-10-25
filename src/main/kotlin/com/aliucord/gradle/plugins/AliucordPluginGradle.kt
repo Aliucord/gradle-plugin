@@ -51,15 +51,11 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                 .map { project ->
                     val aliucord = project.extensions.getAliucord()
                     val android = project.extensions.getAndroid()
-                    val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
 
                     // Retrieve various dependency versions that this plugin is built with
-                    val discordDependency = compileOnlyConfiguration.dependencies
-                        .find { it.group == "com.discord" && it.name == "discord" }
-                    val kotlinDependency = compileOnlyConfiguration.dependencies
-                        .find { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
-                    val aliucordDependency = compileOnlyConfiguration.dependencies
-                        .find { it.group == "com.aliucord" && it.name == "Aliucord" }
+                    val discordDependencyVersion = getDiscordDependencyVersion(project, warn = false)
+                    val kotlinDependencyVersion = getKotlinDependencyVersion(project, warn = false)
+                    val aliucordDependencyVersion = getAliucordDependencyVersion(project, warn = false)
 
                     project.objects.newInstance<GenerateUpdaterJsonTask.PluginInfo>().apply {
                         name.set(project.provider { project.name })
@@ -70,12 +66,11 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                         changelogMedia.set(aliucord.changelogMedia)
                         buildUrl.set(aliucord.buildUrl)
                         minimumDiscordVersion.set(aliucord.minimumDiscordVersion
-                            // TODO: this may fail when the version is a wildcard
-                            .orElse(project.provider { discordDependency?.version?.toInt() }))
-                        minimumAliucordVersion.set(aliucordDependency?.version)
+                            .orElse(project.provider { discordDependencyVersion }))
+                        minimumAliucordVersion.set(aliucordDependencyVersion)
+                        minimumKotlinVersion.set(kotlinDependencyVersion)
                         // If this is null, an earlier task will fail
                         minimumApiLevel.set(android.defaultConfig.minSdkVersion?.apiLevel)
-                        minimumKotlinVersion.set(kotlinDependency?.version)
                         buildFile.fileProvider(project.tasks.named("make")
                             .map { it.outputs.files.singleFile })
                     }
@@ -132,18 +127,13 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
 
             val aliucord = project.extensions.getAliucord()
             val android = project.extensions.getAndroid()
-            val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
 
             // Retrieve various dependency versions that this plugin is built with
-            val discordDependency = compileOnlyConfiguration.dependencies
-                .find { it.group == "com.discord" && it.name == "discord" }
-            val kotlinDependency = compileOnlyConfiguration.dependencies
-                .find { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
-            val aliucordDependency = compileOnlyConfiguration.dependencies
-                .find { it.group == "com.aliucord" && it.name == "Aliucord" }
+            val discordDependencyVersion = getDiscordDependencyVersion(project, warn = true)
+            val kotlinDependencyVersion = getKotlinDependencyVersion(project, warn = true)
+            val aliucordDependencyVersion = getAliucordDependencyVersion(project, warn = true)
             val minimumDiscordVersion = aliucord.minimumDiscordVersion
-                // TODO: this may fail when the version is a wildcard
-                .orElse(project.provider { discordDependency?.version?.toInt() })
+                .orElse(project.provider { discordDependencyVersion })
 
             // Write manifest to be zipped
             val manifest = PluginManifest(
@@ -159,8 +149,8 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                 updateUrl = extension.updateUrl.orNull,
                 changelog = extension.changelog.orNull,
                 changelogMedia = extension.changelogMedia.orNull,
-                minimumAliucordVersion = aliucordDependency?.version,
-                minimumKotlinVersion = kotlinDependency?.version,
+                minimumAliucordVersion = aliucordDependencyVersion,
+                minimumKotlinVersion = kotlinDependencyVersion,
                 minimumApiLevel = android.defaultConfig.minSdkVersion?.apiLevel,
             )
             doFirst {
@@ -188,4 +178,47 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             finalizedBy(restartAliucordTask)
         }
     }
+
+    private fun getDiscordDependencyVersion(project: Project, warn: Boolean = true): Int? {
+        val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
+        val version = compileOnlyConfiguration.dependencies
+            .find { it.group == "com.discord" && it.name == "discord" }
+            ?.version
+
+        if (warn && version != null && version.toIntOrNull() == null) {
+            project.logger.warn("Using '$version' as a version for com.discord:discord is discouraged! " +
+                "Please strictly specify the Discord APK version you want to target at a minimum.")
+        }
+
+        return version?.toIntOrNull()
+    }
+
+    private fun getKotlinDependencyVersion(project: Project, warn: Boolean = true): String? {
+        val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
+        val version = compileOnlyConfiguration.dependencies
+            .find { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
+            ?.version
+
+        if (warn && version != null) {
+            require(version.matches(semVerRegex)) { "Unsupported Kotlin stdlib version!" }
+        }
+
+        return version?.takeIf { it.matches(semVerRegex) }
+    }
+
+    private fun getAliucordDependencyVersion(project: Project, warn: Boolean = true): String? {
+        val compileOnlyConfiguration = project.configurations.getByName("compileOnly")
+        val version = compileOnlyConfiguration.dependencies
+            .find { it.group == "com.aliucord" && it.name == "Aliucord" }
+            ?.version
+
+        if (warn && version == "main-SNAPSHOT") {
+            project.logger.warn("Using 'main-SNAPSHOT' as a version for com.aliucord:Aliucord is discouraged! " +
+                "Please strictly specify the core version you want to target at a minimum.")
+        }
+
+        return version?.takeIf { it.matches(semVerRegex) }
+    }
+
+    private val semVerRegex = """^\d+(\.\d+){2}$""".toRegex()
 }
