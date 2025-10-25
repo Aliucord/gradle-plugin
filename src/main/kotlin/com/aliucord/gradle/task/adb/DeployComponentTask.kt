@@ -44,7 +44,7 @@ public abstract class DeployComponentTask : AdbTask() {
         val remoteComponentName = "${timestamp}_${componentVersion}.${componentFile.extension}"
         val remoteComponentPath = "/data/local/tmp/$remoteComponentName"
 
-        runAdbCommand("push", "\"${componentFile.absolutePath}\"", "\"$remoteComponentPath\"")
+        runAdbCommand("push", componentFile.absolutePath, remoteComponentPath)
         runAdbShell(
             "am", "start",
             "-n", "com.aliucord.manager/.MainActivity",

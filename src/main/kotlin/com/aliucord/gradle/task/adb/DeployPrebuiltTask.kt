@@ -58,11 +58,7 @@ public abstract class DeployPrebuiltTask : AdbTask() {
     }
 
     private fun deployCore(file: File) {
-        runAdbCommand(
-            "push",
-            "\"${file.absolutePath}\"",
-            "\"$REMOTE_ALIUCORD_DIR/Aliucord.zip\"",
-        )
+        runAdbCommand("push", file.absolutePath, "$REMOTE_ALIUCORD_DIR/Aliucord.zip")
         editAliucordSettings {
             set(
                 JsonPrimitive("AC_from_storage"),
@@ -74,11 +70,7 @@ public abstract class DeployPrebuiltTask : AdbTask() {
     }
 
     private fun deployPlugin(file: File) {
-        runAdbCommand(
-            "push",
-            "\"${file.absolutePath}\"",
-            "\"$REMOTE_ALIUCORD_DIR/plugins/${file.name}\"",
-        )
+        runAdbCommand("push", file.absolutePath, "$REMOTE_ALIUCORD_DIR/plugins/${file.name}")
         editAliucordSettings {
             set(
                 JsonPrimitive("AC_PM_${file.nameWithoutExtension}"),
@@ -114,11 +106,7 @@ public abstract class DeployPrebuiltTask : AdbTask() {
 
         aliucordSettingsLock.withLock {
             try {
-                runAdbCommand(
-                    "pull",
-                    "\"${remoteSettingsPath}\"",
-                    "\"${localSettingsFile.absolutePath}\"",
-                )
+                runAdbCommand("pull", remoteSettingsPath, localSettingsFile.absolutePath)
             } catch (e: AdbException) {
                 logger.info("Failed to pull Aliucord settings", e)
             }
@@ -138,11 +126,7 @@ public abstract class DeployPrebuiltTask : AdbTask() {
             val newSettings = Json { prettyPrint = true }.encodeToString(settings)
 
             localSettingsFile.writeText(newSettings)
-            runAdbCommand(
-                "push",
-                "\"${localSettingsFile.absolutePath}\"",
-                "\"${remoteSettingsPath}\"",
-            )
+            runAdbCommand("push", localSettingsFile.absolutePath, remoteSettingsPath)
         }
     }
 
