@@ -127,8 +127,8 @@ public abstract class AliucordExtension @Inject constructor(private val project:
         if (!updateUrl.isPresent && !buildUrl.isPresent) {
             val repo = repoUrl.removePrefix("https://github.com/")
 
-            updateUrl.set("https://raw.githubusercontent.com/$repo/refs/heads/builds/updater.json")
-            buildUrl.set("https://raw.githubusercontent.com/$repo/refs/heads/builds/${project.name}.zip")
+            updateUrl.set("https://cdn.jsdelivr.net/gh/$repo@refs/heads/builds/updater.json")
+            buildUrl.set("https://cdn.jsdelivr.net/gh/$repo@refs/heads/builds/${project.name}.zip")
         }
     }
 
