@@ -49,7 +49,7 @@ public abstract class AliucordInjectorGradle : AliucordBaseGradle() {
         project.tasks.register<DeployComponentTask>("deployWithAdb") {
             group = Constants.TASK_GROUP
             componentType = "injector"
-            componentFile.fileProvider(compileDexTask.map { it.outputs.files.asFileTree.singleFile })
+            componentFile.fileProvider(compileDexTask.map { it.outputs.files.singleFile })
             componentVersion = project.version.toString()
         }
     }
