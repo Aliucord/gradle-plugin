@@ -35,9 +35,9 @@ jobs:
           if-no-files-found: error
 
       - name: Publish Snapshot
-        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         shell: bash
         env:
           MAVEN_SNAPSHOTS_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_SNAPSHOTS_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        if: ${{ env.MAVEN_SNAPSHOTS_USERNAME != '' && env.MAVEN_SNAPSHOTS_PASSWORD != '' }}
         run: ./gradlew :publishAllPublicationsToAliucordSnapshotsRepository -PVERSION_NAME=${GITHUB_SHA::7}
