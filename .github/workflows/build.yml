@@ -24,6 +24,7 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Build & Publish Snapshot
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         shell: bash
         env:
           MAVEN_SNAPSHOTS_USERNAME: ${{ secrets.MAVEN_USERNAME }}
