@@ -19,16 +19,19 @@ import com.aliucord.gradle.getAndroid
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.sdklib.BuildToolInfo
+import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
+import org.gradle.process.internal.ExecActionFactory
 import java.io.File
+import javax.inject.Inject
 
 /**
  * Compiles an Android project's resources using aapt, and outputs an apk containing no code.
  */
-public abstract class CompileResourcesTask : Exec() {
+public abstract class CompileResourcesTask : DefaultTask() {
     @get:InputDirectory
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
@@ -39,6 +42,9 @@ public abstract class CompileResourcesTask : Exec() {
 
     @get:OutputFile
     public abstract val outputFile: RegularFileProperty
+
+    @get:Inject
+    protected abstract val execActionFactory: ExecActionFactory
 
     private val androidJar: Provider<File>
     private val aaptExecutable: Provider<File>
@@ -60,7 +66,8 @@ public abstract class CompileResourcesTask : Exec() {
             .map { File(it.getPath(BuildToolInfo.PathId.AAPT2)) }
     }
 
-    override fun exec() {
+    @TaskAction
+    public fun compile() {
         val tmpRes = File.createTempFile("res", ".zip")
 
         execActionFactory.newExecAction().apply {

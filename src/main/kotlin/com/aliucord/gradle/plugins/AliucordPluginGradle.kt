@@ -17,8 +17,7 @@ package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.*
 import com.aliucord.gradle.models.PluginManifest
-import com.aliucord.gradle.task.ExtractPluginClassTask
-import com.aliucord.gradle.task.GenerateUpdaterJsonTask
+import com.aliucord.gradle.task.*
 import com.aliucord.gradle.task.adb.DeployPrebuiltTask
 import com.aliucord.gradle.task.adb.RestartAliucordTask
 import kotlinx.serialization.json.Json
@@ -98,13 +97,13 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             this.pluginClassNameFile.set(intermediates.map { it.file("pluginClass.txt") })
         }
 
-        val makeTask = project.tasks.register<Zip>("make") {
-            group = Constants.TASK_GROUP
+        val packageTask = project.tasks.register<Zip>("package") {
+            group = Constants.TASK_GROUP_INTERNAL
             entryCompression = ZipEntryCompression.STORED
             isPreserveFileTimestamps = false
-            archiveBaseName.set(project.name)
+            archiveBaseName.set(project.name + "-unaligned")
             archiveVersion.set("")
-            destinationDirectory.set(project.layout.buildDirectory.dir("outputs"))
+            destinationDirectory.set(project.layout.buildDirectory.dir("intermediates"))
 
             val manifestFile = intermediates.map { it.file("manifest.json") }
             val pluginClassNameFile = extractPluginClassTask.flatMap { it.pluginClassNameFile }
@@ -160,6 +159,12 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
                 )
                 manifestFile.get().asFile.writeText(Json.encodeToString(newManifest))
             }
+        }
+
+        val makeTask = project.tasks.register<AlignTask>("make") {
+            group = Constants.TASK_GROUP
+            inputZip.fileProvider(packageTask.map { it.outputs.files.singleFile })
+            outputZip.set(project.layout.buildDirectory.file("outputs/${project.name}.zip"))
 
             doLast {
                 logger.lifecycle("Built plugin at ${outputs.files.singleFile}")

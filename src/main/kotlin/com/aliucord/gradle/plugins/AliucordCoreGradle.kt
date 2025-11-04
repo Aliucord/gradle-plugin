@@ -16,6 +16,7 @@
 package com.aliucord.gradle.plugins
 
 import com.aliucord.gradle.Constants
+import com.aliucord.gradle.task.AlignTask
 import com.aliucord.gradle.task.adb.DeployPrebuiltTask
 import com.aliucord.gradle.task.adb.RestartAliucordTask
 import org.gradle.api.Project
@@ -41,13 +42,13 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         val compileResourcesTask = registerCompileResourcesTask(project)
 
         // Bundling
-        val makeTask = project.tasks.register<Zip>("make") {
-            group = Constants.TASK_GROUP
+        val packageTask = project.tasks.register<Zip>("package") {
+            group = Constants.TASK_GROUP_INTERNAL
             entryCompression = ZipEntryCompression.STORED
             isPreserveFileTimestamps = false
-            archiveBaseName.set(project.name)
+            archiveBaseName.set(project.name + "-unaligned")
             archiveVersion.set("")
-            destinationDirectory.set(project.layout.buildDirectory.dir("outputs"))
+            destinationDirectory.set(project.layout.buildDirectory.dir("intermediates"))
 
             val resourcesFile = compileResourcesTask.flatMap { it.outputFile }
             val resourcesFileTree = project.zipTree(resourcesFile)
@@ -63,6 +64,12 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
             from(resources) {
                 exclude("AndroidManifest.xml")
             }
+        }
+
+        val makeTask = project.tasks.register<AlignTask>("make") {
+            group = Constants.TASK_GROUP
+            inputZip.fileProvider(packageTask.map { it.outputs.files.singleFile })
+            outputZip.set(project.layout.buildDirectory.file("outputs/${project.name}.zip"))
 
             doLast {
                 logger.lifecycle("Built Aliucord core at ${outputs.files.singleFile}")
