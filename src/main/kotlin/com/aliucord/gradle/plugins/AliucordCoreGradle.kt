@@ -77,7 +77,7 @@ public abstract class AliucordCoreGradle : AliucordBaseGradle() {
         project.tasks.register<DeployPrebuiltTask>("deployWithAdb") {
             group = Constants.TASK_GROUP
             deployType = DeployPrebuiltTask.DeployType.Core
-            deployFile.fileProvider(makeTask.map { it.outputs.files.single() })
+            deployFile.fileProvider(makeTask.map { it.outputs.files.singleFile })
             finalizedBy(restartAliucordTask)
         }
     }
