@@ -23,14 +23,9 @@ jobs:
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
-      - name: Build & Publish Snapshot
+      - name: Build & Publish to Maven Local
         shell: bash
-        env:
-          MAVEN_SNAPSHOTS_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_SNAPSHOTS_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-        run: |
-          chmod +x ./gradlew
-          ./gradlew --stacktrace :publishToMavenLocal :publishAllPublicationsToAliucordSnapshotsRepository -PVERSION_NAME=${GITHUB_SHA::7}
+        run: ./gradlew --stacktrace :publishToMavenLocal
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -38,3 +33,14 @@ jobs:
           name: gradle-plugin
           path: ~/.m2/repository/**
           if-no-files-found: error
+
+      - name: Publish Snapshot
+        if: ${{ github.event_name != 'pull_request'
+          && env.MAVEN_SNAPSHOTS_USERNAME != ''
+          && env.MAVEN_SNAPSHOTS_PASSWORD != '' }}
+        env:
+          MAVEN_SNAPSHOTS_USERNAME: ${{ secrets.MAVEN_SNAPSHOTS_USERNAME }}
+          MAVEN_SNAPSHOTS_PASSWORD: ${{ secrets.MAVEN_SNAPSHOTS_PASSWORD }}
+        run: |
+          ./gradlew --stacktrace -PVERSION_NAME=$(git rev-parse --short "$GITHUB_SHA") \
+              :publishAllPublicationsToAliucordSnapshotsRepository
