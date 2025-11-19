@@ -21,7 +21,7 @@ import org.gradle.kotlin.dsl.getByName
 
 internal object Constants {
     const val TASK_GROUP = "aliucord"
-    const val TASK_GROUP_INTERNAL = "aliucordInternal"
+    const val TASK_GROUP_INTERNAL = "aliucord-internal"
 }
 
 /**
