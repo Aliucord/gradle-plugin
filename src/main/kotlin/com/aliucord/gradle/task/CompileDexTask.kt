@@ -15,6 +15,7 @@
 
 package com.aliucord.gradle.task
 
+import com.aliucord.gradle.SensitiveAliucordApi
 import com.aliucord.gradle.getAndroid
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
@@ -34,13 +35,30 @@ import java.nio.file.Path
  * and compiled dependencies as well to be bundled into the dex.
  */
 public abstract class CompileDexTask : DefaultTask() {
+    /**
+     * Sets compiled input files to pass into d8 for compiling to dex.
+     * This accepts compiled jars and class files.
+     */
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
     public abstract val input: ConfigurableFileCollection
 
+    /**
+     * Sets the output directory to compile dex files into.
+     * This will typically will only output one `classes.dex` file as
+     * multidex is not enabled.
+     */
     @get:OutputDirectory
     public abstract val outputDir: DirectoryProperty
+
+    /**
+     * Blacklists common libraries that should not be included in the output dex
+     * under normal circumstances. (Kotlin stdlib, appcompat libraries, etc.)
+     */
+    @get:Input
+    @set:SensitiveAliucordApi
+    public var scanDependencies: Boolean = true
 
     private val minSdkVersion: Int
     private val bootClasspath: List<Path>
@@ -55,12 +73,16 @@ public abstract class CompileDexTask : DefaultTask() {
 
     @TaskAction
     public fun compileDex() {
-        val illegalDependencies = arrayOf("kotlin-stdlib", "material", "constraintlayout", "appcompat")
-        val illegalDependency = input.asFileTree.find { f -> illegalDependencies.any { f.name.startsWith(it) } }
-        if (illegalDependency != null) {
-            throw GradleException("${illegalDependency.name} is defined as an 'implementation' dependency! " +
-                "It should be explicitly defined as a 'compileOnly' dependency! " +
-                "Please read the Aliucord Gradle plugin v2 migration guide!")
+        if (scanDependencies) {
+            val illegalDependencies = arrayOf("kotlin-stdlib", "material", "constraintlayout", "appcompat")
+            val illegalDependency = input.asFileTree.find { f ->
+                f.extension == "jar" && illegalDependencies.any { f.name.startsWith(it) }
+            }
+            if (illegalDependency != null) {
+                throw GradleException("${illegalDependency.name} is defined as an 'implementation' dependency! " +
+                    "It should be explicitly defined as a 'compileOnly' dependency! " +
+                    "Please read the Aliucord Gradle plugin v2 migration guide!")
+            }
         }
 
         val bootClasspath = ClassFileProviderFactory(bootClasspath)
