@@ -28,13 +28,6 @@ import java.util.concurrent.TimeUnit
  */
 @DisableCachingByDefault
 public abstract class AdbTask : DefaultTask() {
-    @get:Input
-    @set:Option(
-        option = "wait-for-debugger",
-        description = "Enables debugging flag when starting the discord activity",
-    )
-    public var waitForDebugger: Boolean = false
-
     @Optional
     @get:Input
     @set:Option(

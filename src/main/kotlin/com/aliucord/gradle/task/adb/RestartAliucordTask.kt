@@ -15,7 +15,9 @@
 
 package com.aliucord.gradle.task.adb
 
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
 
 /**
@@ -23,6 +25,13 @@ import org.gradle.work.DisableCachingByDefault
  */
 @DisableCachingByDefault
 public abstract class RestartAliucordTask : AdbTask() {
+    @get:Input
+    @set:Option(
+        option = "wait-for-debugger",
+        description = "Enables debugging flag when starting the discord activity",
+    )
+    public var waitForDebugger: Boolean = false
+
     init {
         outputs.upToDateWhen { false }
     }
