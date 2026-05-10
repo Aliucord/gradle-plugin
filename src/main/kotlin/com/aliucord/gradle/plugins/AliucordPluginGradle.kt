@@ -21,6 +21,7 @@ import com.aliucord.gradle.task.*
 import com.aliucord.gradle.task.adb.DeployPrebuiltTask
 import com.aliucord.gradle.task.adb.RestartAliucordTask
 import kotlinx.serialization.json.Json
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
@@ -39,7 +40,18 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
             target.extensions.create<AliucordExtension>("aliucord")
             registerTasks(target)
             registerDex2jarTransformer(target)
+
+            target.afterEvaluate {
+                if (!this.version.toString().matches(semVerRegex)) {
+                    throw GradleException("""
+                        The project version '${this.version}' for the plugin '${target.name}' is invalid!
+                        Plugins must have a semantic version in the format of x.x.x specified
+                        in their buildscript! (i.e. version = "1.0.2")
+                    """.trimIndent())
+                }
+            }
         }
+
         deleteLegacyCache(target)
     }
 
@@ -225,5 +237,5 @@ public abstract class AliucordPluginGradle : AliucordBaseGradle() {
         return version?.takeIf { it.matches(semVerRegex) }
     }
 
-    private val semVerRegex = """^\d+(\.\d+){2}$""".toRegex()
+    private val semVerRegex = """^\d+\.\d+\.\d+$""".toRegex()
 }
