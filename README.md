@@ -45,10 +45,10 @@ dependencyResolutionManagement {
 # gradle/libs.versions.toml
 
 [versions]
-aliucord-gradle = "2.0.0"
-android = "8.13.0"
+aliucord-gradle = "2.3.1"
+android = "8.13.2"
 discord = "126021"
-kotlin = "2.2.0"
+kotlin = "2.3.0"
 
 [libraries]
 discord = { module = "com.discord:discord", version.ref = "discord" }
