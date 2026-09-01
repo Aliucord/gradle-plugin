@@ -40,7 +40,7 @@ gradlePlugin {
     }
 }
 
-version = "2.3.1"
+version = "2.3.2"
 
 mavenPublishing {
     coordinates("com.aliucord", "gradle")
