@@ -20,6 +20,7 @@ import com.aliucord.gradle.getAndroid
 import com.aliucord.gradle.task.CompileDexTask
 import com.aliucord.gradle.task.CompileResourcesTask
 import com.aliucord.gradle.transformers.Dex2JarTransform
+import com.android.build.api.attributes.BuildTypeAttr
 import com.android.build.gradle.tasks.ProcessLibraryManifest
 import org.gradle.api.*
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
@@ -69,7 +70,12 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
             isCanBeResolved = true // Allow resolving artifacts
             isCanBeConsumed = false // Limited to this project
             isCanBeDeclared = false // No new artifacts can be added
+
             extendsFrom(project.configurations.getByName("implementation"))
+            attributes {
+                // If multiple artifact variants exist, consume debug
+                attribute(BuildTypeAttr.ATTRIBUTE, project.objects.named("debug"))
+            }
         }
 
         val compileDexTask = project.tasks.register<CompileDexTask>("compileDex") {
@@ -87,7 +93,6 @@ public abstract class AliucordBaseGradle : Plugin<Project> {
                     }
                     .files
             })
-
 
             input.from(project.tasks.named("compileDebugJavaWithJavac"))
             input.from(try {
